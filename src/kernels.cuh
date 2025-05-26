@@ -2,7 +2,7 @@
 #include "device_header.cuh"
 #include "device_functions.cuh"
 
-__global__ void gpuInitDistributions(LBMFields d);
+__global__ void gpuInitFieldsAndDistributions(LBMFields d);
 
 // looped kernels
 

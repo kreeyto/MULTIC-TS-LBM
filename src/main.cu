@@ -27,8 +27,8 @@ int main(int argc, char* argv[]) {
     cudaStream_t mainStream;
     checkCudaErrors(cudaStreamCreate(&mainStream));
 
-    gpuInitDistributions<<<numBlocks,threadsPerBlock,0,mainStream>>> (lbm); 
-    getLastCudaError("gpuInitDistributions");
+    gpuInitFieldsAndDistributions<<<numBlocks,threadsPerBlock,0,mainStream>>> (lbm); 
+    getLastCudaError("gpuInitFieldsAndDistributions");
 
     auto START_TIME = std::chrono::high_resolution_clock::now();
     for (int STEP = 0; STEP <= NSTEPS ; ++STEP) {
@@ -65,11 +65,10 @@ int main(int argc, char* argv[]) {
 
         // =================================== BOUNDARIES =================================== //
 
-            gpuReconstructBoundaries<<<numBlocksBC,threadsPerBlockBC,0,mainStream>>> (lbm); 
+            gpuReconstructBoundaries<<<numBlocks,threadsPerBlock,0,mainStream>>> (lbm); 
             getLastCudaError("gpuReconstructBoundaries");
-
-            //gpuApplyOutflow<<<numBlocks,threadsPerBlock,0,mainStream>>> (lbm);
-            //getLastCudaError("gpuApplyOutflow");
+            gpuApplyOutflow<<<numBlocksBC,threadsPerBlockBC,0,mainStream>>> (lbm);
+            getLastCudaError("gpuApplyOutflow");
 
         // ================================================================================== //
 
@@ -81,7 +80,7 @@ int main(int argc, char* argv[]) {
             //copyAndSaveToBinary(lbm.rho, NX * NY * NZ, SIM_DIR, SIM_ID, STEP, "rho");
             //copyAndSaveToBinary(lbm.ux, NX * NY * NZ, SIM_DIR, SIM_ID, STEP, "ux");
             //copyAndSaveToBinary(lbm.uy, NX * NY * NZ, SIM_DIR, SIM_ID, STEP, "uy");
-            //copyAndSaveToBinary(lbm.uz, NX * NY * NZ, SIM_DIR, SIM_ID, STEP, "uz");
+            copyAndSaveToBinary(lbm.uz, NX * NY * NZ, SIM_DIR, SIM_ID, STEP, "uz");
 
             std::cout << "Passo " << STEP << ": Dados salvos em " << SIM_DIR << std::endl;
         }

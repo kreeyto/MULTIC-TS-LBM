@@ -25,6 +25,7 @@ __host__ __forceinline__ std::string createSimulationDirectory(
     return SIM_DIR;
 }
 
+/*
 __host__ __forceinline__ void computeAndPrintOccupancy() {
     int minGridSize = 0, blockSize = 0;
     cudaError_t err = cudaOccupancyMaxPotentialBlockSize(
@@ -44,6 +45,7 @@ __host__ __forceinline__ void computeAndPrintOccupancy() {
     std::cout << "     Active blocks per SM     : " << maxBlocksPerSM << "\n";
     std::cout << "// =============================================== //\n" << std::endl;
 }
+*/
 
 __host__ __forceinline__ void generateSimulationInfoFile(
     const std::string& SIM_DIR, const std::string& SIM_ID, const std::string& VELOCITY_SET, 

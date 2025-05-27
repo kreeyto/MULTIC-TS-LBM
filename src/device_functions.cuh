@@ -11,7 +11,7 @@ __device__ __forceinline__ int gpuIdxGlobal4(int x, int y, int z, int Q) {
 }
 
 __device__ __forceinline__ float gpuSmoothstep(float edge0, float edge1, float x) {
-    x = fminf(fmaxf((x - edge0) / (edge1 - edge0), 0.0f), 1.0f);
+    x = __saturatef((x - edge0) / (edge1 - edge0));
     return x * x * (3.0f - 2.0f * x);
 }
 

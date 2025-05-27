@@ -3,7 +3,7 @@
 
 extern __constant__ float CSSQ;
 extern __constant__ float OMEGA;
-extern __constant__ float INT_W;
+extern __constant__ float OMC;
 extern __constant__ float GAMMA;
 extern __constant__ float SIGMA;
 extern __constant__ float COEFF_HE;

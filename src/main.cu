@@ -88,11 +88,7 @@ int main(int argc, char* argv[]) {
     auto END_TIME = std::chrono::high_resolution_clock::now();
 
     checkCudaErrors(cudaStreamDestroy(mainStream));
-    cudaFree(lbm.f); cudaFree(lbm.g);
-    cudaFree(lbm.phi); cudaFree(lbm.rho);
-    cudaFree(lbm.ux); cudaFree(lbm.uy); cudaFree(lbm.uz);
-    cudaFree(lbm.normx); cudaFree(lbm.normy); cudaFree(lbm.normz);
-    cudaFree(lbm.ffx); cudaFree(lbm.ffy); cudaFree(lbm.ffz); cudaFree(lbm.ind);
+    cleanupDeviceMemory(lbm);
 
     std::chrono::duration<double> ELAPSED_TIME = END_TIME - START_TIME;
     long long TOTAL_CELLS = static_cast<long long>(NX) * NY * NZ * NSTEPS;

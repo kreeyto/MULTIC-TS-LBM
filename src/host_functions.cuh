@@ -25,7 +25,6 @@ __host__ __forceinline__ std::string createSimulationDirectory(
     return SIM_DIR;
 }
 
-/*
 __host__ __forceinline__ void computeAndPrintOccupancy() {
     int minGridSize = 0, blockSize = 0;
     cudaError_t err = cudaOccupancyMaxPotentialBlockSize(
@@ -45,7 +44,6 @@ __host__ __forceinline__ void computeAndPrintOccupancy() {
     std::cout << "     Active blocks per SM     : " << maxBlocksPerSM << "\n";
     std::cout << "// =============================================== //\n" << std::endl;
 }
-*/
 
 __host__ __forceinline__ void generateSimulationInfoFile(
     const std::string& SIM_DIR, const std::string& SIM_ID, const std::string& VELOCITY_SET, 
@@ -102,4 +100,12 @@ __host__ __forceinline__ void copyAndSaveToBinary(
 
     file.write(reinterpret_cast<const char*>(host_data.data()), host_data.size() * sizeof(float));
     file.close();
+}
+
+__host__ __forceinline__ void cleanupDeviceMemory(LBMFields& f) {
+    cudaFree(f.f); cudaFree(f.g);
+    cudaFree(f.phi); cudaFree(f.rho);
+    cudaFree(f.ux); cudaFree(f.uy); cudaFree(f.uz);
+    cudaFree(f.normx); cudaFree(f.normy); cudaFree(f.normz);
+    cudaFree(f.ffx); cudaFree(f.ffy); cudaFree(f.ffz); cudaFree(f.ind);
 }

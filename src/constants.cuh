@@ -6,8 +6,8 @@
 //#define G_D3Q9 // not yet suported
 //#define G_D3Q15 // not yet suported
 
-#define RUN_MODE
-//#define SAMPLE_MODE
+//#define RUN_MODE
+#define SAMPLE_MODE
 //#define DEBUG_MODE
 
 #define PERTURBATION
@@ -17,8 +17,8 @@
 #define BLOCK_SIZE_Z 8
 
 // domain size
-constexpr int MESH = 128;
-constexpr int DIAM = 12.8; // with 128 mesh max diam is 19
+constexpr int MESH = 64;
+constexpr int DIAM = MESH/10; // with 128 mesh max diam is 19
 constexpr int NX   = MESH;
 constexpr int NY   = MESH;
 constexpr int NZ   = MESH*2;
@@ -35,8 +35,8 @@ constexpr float VISC       = (U_JET * DIAM) / REYNOLDS;
 constexpr float H_TAU      = 0.5f + 3.0f * VISC;
 constexpr float H_CSSQ     = 1.0f / 3.0f;
 constexpr float H_OMEGA    = 1.0f / H_TAU;
-constexpr float H_INT_W    = 7.0f;
-constexpr float H_GAMMA    = 0.15f * H_INT_W;
+constexpr float H_OMC      = 1.0f - H_OMEGA;
+constexpr float H_GAMMA    = 0.15f * 7.0f;
 constexpr float H_SIGMA    = (U_JET * U_JET * DIAM) / WEBER;
 constexpr float H_COEFF_HE = 0.5f; // fixed approximation of (1-omega/2), valid in high re limitations
 

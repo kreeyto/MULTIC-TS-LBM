@@ -6,7 +6,7 @@
 
 inline void __checkCurandStatus(curandStatus_t status, const char* const file, const int line) {
     if (status != CURAND_STATUS_SUCCESS) {
-        printf("Curand error at %s(%d)\n", __FILE__, __LINE__); fflush(stdout);
+        printf("Curand error at %s(%d)\n", file, line); fflush(stdout);
         exit(-1);
     }
 }

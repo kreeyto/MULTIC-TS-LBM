@@ -11,10 +11,19 @@ __global__ void gpuComputePhaseField(LBMFields d) {
         z == 0 || z == NZ-1) return;
 
     const int idx3 = gpuIdxGlobal3(x,y,z);
+    
+    float pop[GLINKS];
 
-    float phi_val = d.g[gpuIdxGlobal4(x,y,z,0)] + d.g[gpuIdxGlobal4(x,y,z,1)] + d.g[gpuIdxGlobal4(x,y,z,2)] 
-                  + d.g[gpuIdxGlobal4(x,y,z,3)] + d.g[gpuIdxGlobal4(x,y,z,4)] + d.g[gpuIdxGlobal4(x,y,z,5)] 
-                  + d.g[gpuIdxGlobal4(x,y,z,6)];
+    pop[0] = d.g[gpuIdxGlobal4(x,y,z,0)];
+    pop[1] = d.g[gpuIdxGlobal4(x,y,z,1)];
+    pop[2] = d.g[gpuIdxGlobal4(x,y,z,2)];
+    pop[3] = d.g[gpuIdxGlobal4(x,y,z,3)];
+    pop[4] = d.g[gpuIdxGlobal4(x,y,z,4)];
+    pop[5] = d.g[gpuIdxGlobal4(x,y,z,5)];
+    pop[6] = d.g[gpuIdxGlobal4(x,y,z,6)];
+
+    float phi_pre_shift = pop[0] + pop[1] + pop[2] + pop[3] + pop[4] + pop[5] + pop[6];
+    float phi_val = phi_pre_shift + 1.0f;
 
     d.phi[idx3] = phi_val;
 }
@@ -31,12 +40,12 @@ __global__ void gpuComputeGradients(LBMFields d) {
 
     const int idx3 = gpuIdxGlobal3(x,y,z);
 
-    float grad_phi_x = 3.0f * (W_G[1] * d.phi[gpuIdxGlobal3(x+1,y,z)] - W_G[2] * d.phi[gpuIdxGlobal3(x-1,y,z)]);
-    float grad_phi_y = 3.0f * (W_G[3] * d.phi[gpuIdxGlobal3(x,y+1,z)] - W_G[4] * d.phi[gpuIdxGlobal3(x,y-1,z)]);
-    float grad_phi_z = 3.0f * (W_G[5] * d.phi[gpuIdxGlobal3(x,y,z+1)] - W_G[6] * d.phi[gpuIdxGlobal3(x,y,z-1)]);
+    float grad_phi_x = 0.375f * (d.phi[gpuIdxGlobal3(x+1,y,z)] - d.phi[gpuIdxGlobal3(x-1,y,z)]);
+    float grad_phi_y = 0.375f * (d.phi[gpuIdxGlobal3(x,y+1,z)] - d.phi[gpuIdxGlobal3(x,y-1,z)]);
+    float grad_phi_z = 0.375f * (d.phi[gpuIdxGlobal3(x,y,z+1)] - d.phi[gpuIdxGlobal3(x,y,z-1)]);
 
     float squared = grad_phi_x*grad_phi_x + grad_phi_y*grad_phi_y + grad_phi_z*grad_phi_z;
-    float mag = rsqrtf(fmaxf(squared,1e-9f));
+    float mag = rsqrtf(fmaxf(squared,1e-6f));
     float normx_val = grad_phi_x * mag;
     float normy_val = grad_phi_y * mag;
     float normz_val = grad_phi_z * mag;
@@ -65,12 +74,9 @@ __global__ void gpuComputeCurvature(LBMFields d) {
     float normz_val = d.normz[idx3];
     float ind_val = d.ind[idx3];
 
-    float curvature = -3.0f * ( W_G[1] * d.normx[gpuIdxGlobal3(x+1,y,z)] 
-                              - W_G[2] * d.normx[gpuIdxGlobal3(x-1,y,z)] 
-                              + W_G[3] * d.normy[gpuIdxGlobal3(x,y+1,z)] 
-                              - W_G[4] * d.normy[gpuIdxGlobal3(x,y-1,z)]
-                              + W_G[5] * d.normz[gpuIdxGlobal3(x,y,z+1)]
-                              - W_G[6] * d.normz[gpuIdxGlobal3(x,y,z-1)] );
+    float curvature = -0.375f * (d.normx[gpuIdxGlobal3(x+1,y,z)] - d.normx[gpuIdxGlobal3(x-1,y,z)] +
+                                 d.normy[gpuIdxGlobal3(x,y+1,z)] - d.normy[gpuIdxGlobal3(x,y-1,z)] +
+                                 d.normz[gpuIdxGlobal3(x,y,z+1)] - d.normz[gpuIdxGlobal3(x,y,z-1)]);
 
     float coeff_force = SIGMA * curvature;
     d.ffx[idx3] = coeff_force * normx_val * ind_val;

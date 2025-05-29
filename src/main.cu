@@ -20,9 +20,9 @@ int main(int argc, char* argv[]) {
                    (NY + threadsPerBlock.y - 1) / threadsPerBlock.y,
                    (NZ + threadsPerBlock.z - 1) / threadsPerBlock.z);
 
-    dim3 threadsPerBlockBC(BLOCK_SIZE_X*2,BLOCK_SIZE_Y*2);  
-    dim3 numBlocksBC((NX + threadsPerBlockBC.x - 1) / threadsPerBlockBC.x,
-                     (NY + threadsPerBlockBC.y - 1) / threadsPerBlockBC.y);    
+    dim3 threadsPerBlockInOut(BLOCK_SIZE_X*2,BLOCK_SIZE_Y*2);  
+    dim3 numBlocksInOut((NX + threadsPerBlockInOut.x - 1) / threadsPerBlockInOut.x,
+                        (NY + threadsPerBlockInOut.y - 1) / threadsPerBlockInOut.y);    
 
     cudaStream_t mainStream;
     checkCudaErrors(cudaStreamCreate(&mainStream));
@@ -34,12 +34,12 @@ int main(int argc, char* argv[]) {
     for (int STEP = 0; STEP <= NSTEPS ; ++STEP) {
         std::cout << "Passo " << STEP << " de " << NSTEPS << " iniciado..." << std::endl;
 
-        // =================================== BOUNDARY =================================== //
+        // =================================== INFLOW =================================== //
 
-            gpuApplyInflow<<<numBlocksBC,threadsPerBlockBC,0,mainStream>>> (lbm,STEP); 
+            gpuApplyInflow<<<numBlocksInOut,threadsPerBlockInOut,0,mainStream>>> (lbm,STEP); 
             getLastCudaError("gpuApplyInflow");
 
-        // ================================================================================ //
+        // =============================================================================  //
 
         // ================================== INTERFACE ================================== //
 
@@ -51,9 +51,7 @@ int main(int argc, char* argv[]) {
             getLastCudaError("gpuComputeCurvature");
 
         // ============================================================================== // 
-
         
-
         // ========================= COLLISION & STREAMING ========================= //
             
             gpuMomCollisionStream<<<numBlocks,threadsPerBlock,0,mainStream>>> (lbm); 
@@ -67,7 +65,7 @@ int main(int argc, char* argv[]) {
 
             gpuReconstructBoundaries<<<numBlocks,threadsPerBlock,0,mainStream>>> (lbm); 
             getLastCudaError("gpuReconstructBoundaries");
-            gpuApplyOutflow<<<numBlocksBC,threadsPerBlockBC,0,mainStream>>> (lbm);
+            gpuApplyOutflow<<<numBlocksInOut,threadsPerBlockInOut,0,mainStream>>> (lbm);
             getLastCudaError("gpuApplyOutflow");
 
         // ================================================================================== //
@@ -77,9 +75,6 @@ int main(int argc, char* argv[]) {
         if (STEP % MACRO_SAVE == 0) {
 
             copyAndSaveToBinary(lbm.phi, NX * NY * NZ, SIM_DIR, SIM_ID, STEP, "phi");
-            //copyAndSaveToBinary(lbm.rho, NX * NY * NZ, SIM_DIR, SIM_ID, STEP, "rho");
-            //copyAndSaveToBinary(lbm.ux, NX * NY * NZ, SIM_DIR, SIM_ID, STEP, "ux");
-            //copyAndSaveToBinary(lbm.uy, NX * NY * NZ, SIM_DIR, SIM_ID, STEP, "uy");
             copyAndSaveToBinary(lbm.uz, NX * NY * NZ, SIM_DIR, SIM_ID, STEP, "uz");
 
             std::cout << "Passo " << STEP << ": Dados salvos em " << SIM_DIR << std::endl;
@@ -99,7 +94,7 @@ int main(int argc, char* argv[]) {
     std::cout << "     Performance             : " << MLUPS << " MLUPS\n";
     std::cout << "// =============================================== //\n" << std::endl;
 
-    generateSimulationInfoFile(SIM_DIR,SIM_ID,VELOCITY_SET,NSTEPS,MACRO_SAVE,H_TAU,MLUPS);
+    generateSimulationInfoFile(SIM_DIR,SIM_ID,VELOCITY_SET,NSTEPS,MACRO_SAVE,TAU,MLUPS);
     getLastCudaError("Final sync");
     return 0;
 }

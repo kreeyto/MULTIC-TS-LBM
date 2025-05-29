@@ -56,7 +56,7 @@ __global__ void gpuMomCollisionStream(LBMFields d) {
 
     #pragma unroll FLINKS
     for (int Q = 0; Q < FLINKS; ++Q) {
-        float pre_feq = gpuComputeEquilibriaSecondOrder(rho_val,ux_val,uy_val,uz_val,uu,Q);
+        float pre_feq = gpuComputeEquilibria(rho_val,ux_val,uy_val,uz_val,uu,Q);
         float he_force = COEFF_HE * pre_feq * ((CIX[Q] - ux_val) * ffx_val +
                                                (CIY[Q] - uy_val) * ffy_val +
                                                (CIZ[Q] - uz_val) * ffz_val) * inv_rho_cssq;
@@ -79,25 +79,28 @@ __global__ void gpuMomCollisionStream(LBMFields d) {
     PYZ += fneq[19] - fneq[21] + fneq[20] - fneq[22] + fneq[25] - fneq[23] + fneq[26] - fneq[24];
     #endif // D3Q27
  
-    d.ux[idx3] = ux_val; d.uy[idx3] = uy_val; d.uz[idx3] = uz_val;
+    d.ux[idx3] = ux_val; 
+    d.uy[idx3] = uy_val; 
+    d.uz[idx3] = uz_val;
+    d.rho[idx3] = rho_val;
 
     #pragma unroll FLINKS
     for (int Q = 0; Q < FLINKS; ++Q) {
-        const int xx = x + CIX[Q];
-        const int yy = y + CIY[Q];
+        const int xx = (x + CIX[Q] + NX) % NX;
+        const int yy = (y + CIY[Q] + NY) % NY;
         const int zz = z + CIZ[Q];
-        float feq = gpuComputeEquilibriaSecondOrder(rho_val,ux_val,uy_val,uz_val,uu,Q) - W[Q];
+        float feq = gpuComputeEquilibria(rho_val,ux_val,uy_val,uz_val,uu,Q) - W[Q];
         float he_force = COEFF_HE * feq * ( (CIX[Q] - ux_val) * ffx_val +
                                             (CIY[Q] - uy_val) * ffy_val +
                                             (CIZ[Q] - uz_val) * ffz_val ) * inv_rho_cssq;
-        float fneq_scalar = (W[Q] * 4.5f) * ((CIX[Q]*CIX[Q] - CSSQ) * PXX +
-                                             (CIY[Q]*CIY[Q] - CSSQ) * PYY +
-                                             (CIZ[Q]*CIZ[Q] - CSSQ) * PZZ +
-                                             2.0f * CIX[Q] * CIY[Q] * PXY +
-                                             2.0f * CIX[Q] * CIZ[Q] * PXZ +
-                                             2.0f * CIY[Q] * CIZ[Q] * PYZ);
+        float fneq_reg = (W[Q] * 4.5f) * ((CIX[Q]*CIX[Q] - CSSQ) * PXX +
+                                          (CIY[Q]*CIY[Q] - CSSQ) * PYY +
+                                          (CIZ[Q]*CIZ[Q] - CSSQ) * PZZ +
+                                           2.0f * CIX[Q] * CIY[Q] * PXY +
+                                           2.0f * CIX[Q] * CIZ[Q] * PXZ +
+                                           2.0f * CIY[Q] * CIZ[Q] * PYZ);
         const int streamed_idx4 = gpuIdxGlobal4(xx,yy,zz,Q);
-        d.f[streamed_idx4] = feq + OMC * fneq_scalar + he_force; 
+        d.f[streamed_idx4] = feq + OMC * fneq_reg + he_force; 
     }
 }
 
@@ -120,14 +123,14 @@ __global__ void gpuEvolvePhaseField(LBMFields d) {
     float normx_val = d.normx[idx3]; 
     float normy_val = d.normy[idx3];
     float normz_val = d.normz[idx3];
-
+    
     float phi_norm = GAMMA * phi_val * (1.0f - phi_val);
     #pragma unroll GLINKS
     for (int Q = 0; Q < GLINKS; ++Q) {
-        const int xx = (x + CIX[Q] + NX) & (NX-1);
-        const int yy = (y + CIY[Q] + NY) & (NY-1);
+        const int xx = (x + CIX[Q] + NX) % NX;
+        const int yy = (y + CIY[Q] + NY) % NY;
         const int zz = z + CIZ[Q];
-        float geq = gpuComputeEquilibriaFirstOrder(phi_val,ux_val,uy_val,uz_val,Q) - W_G[Q];
+        float geq = gpuComputeTruncatedEquilibria(phi_val,ux_val,uy_val,uz_val,Q) - W_G[Q];
         float anti_diff = W_G[Q] * phi_norm * (CIX[Q] * normx_val + CIY[Q] * normy_val + CIZ[Q] * normz_val);
         const int streamed_idx4 = gpuIdxGlobal4(xx,yy,zz,Q);
         d.g[streamed_idx4] = geq + anti_diff;

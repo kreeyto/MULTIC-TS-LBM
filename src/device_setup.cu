@@ -10,8 +10,8 @@ __global__ void gpuInitFieldsAndDistributions(LBMFields d) {
 
     // no implicit initialization even though rho=1 and phi=0.
     // just going for safety here, as f and g could be simplified.
-    // phi is initialized to 0 by memset
     d.rho[idx3] = 1.0f;
+    d.phi[idx3] = 0.0f;
     float rho_val = d.rho[idx3];
     float phi_val = d.phi[idx3];
     #pragma unroll FLINKS
@@ -25,14 +25,6 @@ __global__ void gpuInitFieldsAndDistributions(LBMFields d) {
         d.g[idx4] = (W_G[Q] * phi_val) - W_G[Q];
     }
 }
-
-
-__constant__ float CSSQ;
-__constant__ float OMEGA;
-__constant__ float OMC;
-__constant__ float GAMMA;
-__constant__ float SIGMA;
-__constant__ float COEFF_HE;
 
 __constant__ float W[FLINKS];
 __constant__ float W_G[GLINKS];
@@ -66,27 +58,6 @@ void initDeviceVars() {
     checkCudaErrors(cudaMalloc(&lbm.ffz,   SIZE));
     checkCudaErrors(cudaMalloc(&lbm.f,     F_DIST_SIZE));
     checkCudaErrors(cudaMalloc(&lbm.g,     G_DIST_SIZE));
-
-    checkCudaErrors(cudaMemset(lbm.phi,   0, SIZE));
-    checkCudaErrors(cudaMemset(lbm.ux,    0, SIZE));
-    checkCudaErrors(cudaMemset(lbm.uy,    0, SIZE));
-    checkCudaErrors(cudaMemset(lbm.uz,    0, SIZE));
-    checkCudaErrors(cudaMemset(lbm.normx, 0, SIZE));
-    checkCudaErrors(cudaMemset(lbm.normy, 0, SIZE));
-    checkCudaErrors(cudaMemset(lbm.normz, 0, SIZE));
-    checkCudaErrors(cudaMemset(lbm.ind,   0, SIZE));
-    checkCudaErrors(cudaMemset(lbm.ffx,   0, SIZE));
-    checkCudaErrors(cudaMemset(lbm.ffy,   0, SIZE));
-    checkCudaErrors(cudaMemset(lbm.ffz,   0, SIZE));
-    checkCudaErrors(cudaMemset(lbm.f,     0, F_DIST_SIZE));
-    checkCudaErrors(cudaMemset(lbm.g,     0, G_DIST_SIZE));
-
-    checkCudaErrors(cudaMemcpyToSymbol(CSSQ,     &H_CSSQ,     sizeof(float)));
-    checkCudaErrors(cudaMemcpyToSymbol(OMEGA,    &H_OMEGA,    sizeof(float)));
-    checkCudaErrors(cudaMemcpyToSymbol(OMC,      &H_OMC,      sizeof(float)));
-    checkCudaErrors(cudaMemcpyToSymbol(GAMMA,    &H_GAMMA,    sizeof(float)));
-    checkCudaErrors(cudaMemcpyToSymbol(SIGMA,    &H_SIGMA,    sizeof(float)));
-    checkCudaErrors(cudaMemcpyToSymbol(COEFF_HE, &H_COEFF_HE, sizeof(float)));
 
     checkCudaErrors(cudaMemcpyToSymbol(W,   &H_W,   FLINKS * sizeof(float)));
     checkCudaErrors(cudaMemcpyToSymbol(W_G, &H_W_G, GLINKS * sizeof(float)));

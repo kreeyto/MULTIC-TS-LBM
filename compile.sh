@@ -9,6 +9,18 @@ if [ -z "$VELOCITY_SET" ] || [ -z "$ID" ]; then
     exit 1
 fi
 
+if [ "$VELOCITY_SET" != "D3Q19" ] && [ "$VELOCITY_SET" != "D3Q27" ]; then
+    echo "Invalid VELOCITY_SET. Use 'D3Q19' or 'D3Q27'."
+    exit 1
+fi
+
+# least register value without spills
+if [ "$VELOCITY_SET" = "D3Q27" ]; then
+    MAXRREG=128 
+elif [ "$VELOCITY_SET" = "D3Q19" ]; then
+    MAXRREG=91
+fi
+
 BASE_DIR=$(dirname "$0")
 SRC_DIR="${BASE_DIR}/src"
 OUTPUT_DIR="${BASE_DIR}/bin/${VELOCITY_SET}"
@@ -27,7 +39,7 @@ nvcc -O3 --restrict \
      "${SRC_DIR}/lbm.cu" \
      "${SRC_DIR}/lbm_bcs.cu" \
      "${SRC_DIR}/device_setup.cu" \
-     -lcudadevrt -lcurand -maxrregcount=91 -D${VELOCITY_SET} \
+     -lcudadevrt -lcurand -maxrregcount=${MAXRREG} -D${VELOCITY_SET} \
      -o "${EXECUTABLE}"
 
 if [ $? -eq 0 ]; then

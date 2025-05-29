@@ -13,6 +13,8 @@ __global__ void gpuInitFieldsAndDistributions(LBMFields d);
 __global__ void gpuApplyInflow(LBMFields d, const int STEP);
 __global__ void gpuApplyOutflow(LBMFields d);
 __global__ void gpuReconstructBoundaries(LBMFields d); // streaming-safe wrap/periodic
+__global__ void gpuApplyPeriodicX(LBMFields d);
+__global__ void gpuApplyPeriodicY(LBMFields d);
 
 // =======================================================================================
 // PHASE FIELD CALCULATIONS

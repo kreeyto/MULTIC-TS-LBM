@@ -13,8 +13,7 @@ extern __constant__ int CIX[FLINKS], CIY[FLINKS], CIZ[FLINKS];
 struct LBMFields {
     float *rho, *phi;
     float *ux, *uy, *uz;
-    float *normx, *normy, *normz;
-    float *ind, *ffx, *ffy, *ffz;
+    float *ffx, *ffy, *ffz;
     float *f, *g; 
 };
 

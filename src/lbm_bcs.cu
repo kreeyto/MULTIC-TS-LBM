@@ -1,5 +1,7 @@
 #include "kernels.cuh"
 
+#define INFLOW_CASE_ONE
+
 __global__ void gpuApplyInflow(LBMFields d, const int STEP) {
     const int x = threadIdx.x + blockIdx.x * blockDim.x;
     const int y = threadIdx.y + blockIdx.y * blockDim.y;
@@ -15,11 +17,30 @@ __global__ void gpuApplyInflow(LBMFields d, const int STEP) {
     float radius = 0.5f * DIAM;
     if (radial_dist > radius) return;
 
-    float phi_in = 1.0f;
-    #ifdef PERTURBATION
-        float uz_in = U_JET * (1.0f + DATAZ[STEP/MACRO_SAVE] * 10.0f);
-    #else
-        float uz_in = U_JET;
+    #ifdef INFLOW_CASE_ONE // phi gets a smooth transition and border correction, uz decreases with radial distance. JET DOESN'T FLATTEN -> good behavior
+        float radial_dist_norm = radial_dist / radius;
+        float envelope = 1.0f - gpuSmoothstep(0.6f, 1.0f, radial_dist_norm);
+        float profile = 0.5f + 0.5f * tanhf(2.0f * (radius - radial_dist) / 3.0f);
+        float phi_in = profile * envelope; 
+        #ifdef PERTURBATION
+            float uz_in = U_JET * (1.0f + DATAZ[STEP/MACRO_SAVE] * 10.0f) * phi_in;
+        #else
+            float uz_in = U_JET * phi_in;
+        #endif
+    #elif defined(INFLOW_CASE_TWO) // phi gets a smooth transition but uz is constant throughout the inlet. JET FLATTENS -> bad behavior
+        float phi_in = 0.5f + 0.5f * tanhf(2.0f * (radius - radial_dist) / 3.0f);
+        #ifdef PERTURBATION
+            float uz_in = U_JET * (1.0f + DATAZ[STEP/MACRO_SAVE] * 10.0f);
+        #else
+            float uz_in = U_JET;
+        #endif
+    #elif defined(INFLOW_CASE_THREE) // straight forward inflow. JET FLATTENS -> bad behavior
+        float phi_in = 1.0f;
+        #ifdef PERTURBATION
+            float uz_in = U_JET * (1.0f + DATAZ[STEP/MACRO_SAVE] * 10.0f);
+        #else
+            float uz_in = U_JET;
+        #endif
     #endif
 
     float rho_val = 1.0f;

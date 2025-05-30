@@ -4,8 +4,8 @@
 // scalar field related velocity set is set here
 #define G_D3Q7
 
-#define RUN_MODE
-//#define SAMPLE_MODE
+//#define RUN_MODE
+#define SAMPLE_MODE
 //#define DEBUG_MODE
 
 #define PERTURBATION
@@ -15,28 +15,31 @@
 #define BLOCK_SIZE_Z 8
 
 // domain size
-constexpr int MESH = 128;
-constexpr int DIAM = 19; // with 128 mesh max diam is 19
+constexpr int MESH = 64;
+constexpr int DIAM = 10; // with 128 mesh max diam is 19
 constexpr int NX   = MESH;
 constexpr int NY   = MESH;
-constexpr int NZ   = MESH*3;
+constexpr int NZ   = MESH*2;
 
 // jet velocity
 constexpr float U_JET = 0.05; 
 
 // adimensional parameters
 constexpr int REYNOLDS = 5000; 
-constexpr int WEBER    = 500; 
+constexpr int WEBER    = 1; 
 
 // general model parameters
-constexpr float VISC     = (U_JET * DIAM) / REYNOLDS; 
-constexpr float TAU      = 0.5f + 3.0f * VISC;
-constexpr float CSSQ     = 1.0f / 3.0f; 
-constexpr float OMEGA    = 1.0f / TAU;
-constexpr float OMC      = 1.0f - OMEGA;
-constexpr float GAMMA    = 0.15f * 3.0f;
-constexpr float SIGMA    = (U_JET * U_JET * DIAM) / WEBER;
-constexpr float COEFF_HE = 0.5f; // fixed approximation of (1-omega/2), valid in high re limitations
+constexpr float VISC     = (U_JET * DIAM) / REYNOLDS;      // kinematic viscosity
+constexpr float TAU      = 0.5f + 3.0f * VISC;             // relaxation time
+constexpr float CSSQ     = 1.0f / 3.0f;                    // square of speed of sound
+constexpr float OMEGA    = 1.0f / TAU;                     // relaxation frequency
+constexpr float GAMMA    = 0.15f * 3.0f;                   // sharpening of the interface
+constexpr float SIGMA    = (U_JET * U_JET * DIAM) / WEBER; // surface tension coefficient
+
+// auxiliary constants
+constexpr float OOS      = 1.0f / 6.0f;  // one over six
+constexpr float OMC      = 1.0f - OMEGA; // complementary of omega
+constexpr float COEFF_HE = 0.5f;         // fixed approximation of (1-omega/2), valid in high re limitations
 
 // first distribution related
 #ifdef D3Q19 //                 0  1  2  3  4  5  6  7  8  9  10 11 12 13 14 15 16 17 18 

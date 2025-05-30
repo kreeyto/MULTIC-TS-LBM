@@ -29,7 +29,7 @@ __device__ __forceinline__ float gpuComputeTruncatedEquilibria(float density, fl
 #elif defined(D3Q27)
     __device__ __forceinline__ float gpuComputeEquilibria(float density, float ux, float uy, float uz, float uu, int Q) {
         float cu = 3.0f * (ux*CIX[Q] + uy*CIY[Q] + uz*CIZ[Q]);
-        float eqbase = density * (cu + 0.5f*cu*cu - uu + cu*cu*cu/6.0f - cu*uu);
+        float eqbase = density * (cu + 0.5f*cu*cu - uu + OOS*cu*cu*cu - cu*uu);
         return W[Q] * (density + eqbase);
     }
 #endif

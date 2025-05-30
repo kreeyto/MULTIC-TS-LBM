@@ -40,24 +40,13 @@ int main(int argc, char* argv[]) {
             getLastCudaError("gpuApplyInflow");
 
         // =============================================================================  //
-
-        // ================================== INTERFACE ================================== //
-
-            gpuComputePhaseField<<<numBlocks,threadsPerBlock,0,mainStream>>> (lbm); 
-            getLastCudaError("gpuComputePhaseField");
-            gpuComputeGradients<<<numBlocks,threadsPerBlock,0,mainStream>>> (lbm); 
-            getLastCudaError("gpuComputeGradients");
-            gpuComputeCurvature<<<numBlocks,threadsPerBlock,0,mainStream>>> (lbm); 
-            getLastCudaError("gpuComputeCurvature");
-
-        // ============================================================================== // 
         
         // ========================= COLLISION & STREAMING ========================= //
             
-            gpuMomCollisionStream<<<numBlocks,threadsPerBlock,0,mainStream>>> (lbm); 
-            getLastCudaError("gpuMomCollisionStream");
             gpuEvolvePhaseField<<<numBlocks,threadsPerBlock,0,mainStream>>> (lbm); 
             getLastCudaError("gpuEvolvePhaseField");
+            gpuMomCollisionStream<<<numBlocks,threadsPerBlock,0,mainStream>>> (lbm); 
+            getLastCudaError("gpuMomCollisionStream");
 
         // ========================================================================= //    
 
@@ -75,7 +64,7 @@ int main(int argc, char* argv[]) {
         if (STEP % MACRO_SAVE == 0) {
 
             copyAndSaveToBinary(lbm.phi, NX * NY * NZ, SIM_DIR, SIM_ID, STEP, "phi");
-            copyAndSaveToBinary(lbm.uz, NX * NY * NZ, SIM_DIR, SIM_ID, STEP, "uz");
+            //copyAndSaveToBinary(lbm.uz, NX * NY * NZ, SIM_DIR, SIM_ID, STEP, "uz");
 
             std::cout << "Passo " << STEP << ": Dados salvos em " << SIM_DIR << std::endl;
         }

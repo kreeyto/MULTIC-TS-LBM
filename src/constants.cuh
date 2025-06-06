@@ -4,8 +4,8 @@
 // scalar field related velocity set is set here
 #define G_D3Q7
 
-#define RUN_MODE
-//#define SAMPLE_MODE
+//#define RUN_MODE
+#define SAMPLE_MODE
 //#define DEBUG_MODE
 
 #define PERTURBATION
@@ -15,11 +15,11 @@
 #define BLOCK_SIZE_Z 8
 
 // domain size
-constexpr int MESH = 128;
-constexpr int DIAM = 19; 
+constexpr int MESH = 64;
+constexpr int DIAM = 10; 
 constexpr int NX   = MESH;
 constexpr int NY   = MESH;
-constexpr int NZ   = MESH*3;
+constexpr int NZ   = MESH*2;
 
 // jet velocity
 constexpr float U_JET = 0.05; 

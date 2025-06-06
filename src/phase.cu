@@ -13,9 +13,13 @@ __global__ void gpuEvolvePhaseField(LBMFields d) {
     const int idx3 = gpuIdxGlobal3(x,y,z);
 
     float pop[GLINKS];
-    #pragma unroll GLINKS
-    for (int Q = 0; Q < GLINKS; ++Q)
-        pop[Q] = __half2float(d.g[gpuIdxGlobal4(x,y,z,Q)]);
+    pop[0] = __half2float(d.g[gpuIdxGlobal4(x,y,z,0)]);
+    pop[1] = __half2float(d.g[gpuIdxGlobal4(x,y,z,1)]);
+    pop[2] = __half2float(d.g[gpuIdxGlobal4(x,y,z,2)]);
+    pop[3] = __half2float(d.g[gpuIdxGlobal4(x,y,z,3)]);
+    pop[4] = __half2float(d.g[gpuIdxGlobal4(x,y,z,4)]);
+    pop[5] = __half2float(d.g[gpuIdxGlobal4(x,y,z,5)]);
+    pop[6] = __half2float(d.g[gpuIdxGlobal4(x,y,z,6)]);
 
     float ux_val = d.ux[idx3];
     float uy_val = d.uy[idx3];

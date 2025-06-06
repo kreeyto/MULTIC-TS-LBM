@@ -11,6 +11,7 @@ __global__ void gpuInitFieldsAndDistributions(LBMFields d);
 // BOUNDARY CONDITIONS
 // =======================================================================================
 __global__ void gpuApplyInflow(LBMFields d, const int STEP);
+__global__ void gpuApplyPeriodicXY(LBMFields d); 
 __global__ void gpuApplyOutflow(LBMFields d);
 __global__ void gpuReconstructBoundaries(LBMFields d); // streaming-safe wrap/periodic
 

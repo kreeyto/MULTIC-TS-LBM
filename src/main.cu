@@ -22,8 +22,8 @@ int main(int argc, char* argv[]) {
 
     dim3 threadsPerBlockInOut(BLOCK_SIZE_X*2,BLOCK_SIZE_Y*2);  
     dim3 numBlocksInOut((NX + threadsPerBlockInOut.x - 1) / threadsPerBlockInOut.x,
-                        (NY + threadsPerBlockInOut.y - 1) / threadsPerBlockInOut.y);    
-
+                        (NY + threadsPerBlockInOut.y - 1) / threadsPerBlockInOut.y);
+                         
     cudaStream_t mainStream;
     checkCudaErrors(cudaStreamCreate(&mainStream));
 
@@ -36,7 +36,7 @@ int main(int argc, char* argv[]) {
 
         // =================================== INFLOW =================================== //
 
-            gpuApplyInflow<<<numBlocksInOut,threadsPerBlockInOut,0,mainStream>>> (lbm,STEP); 
+            gpuApplyInflow<<<numBlocksInOut,threadsPerBlockInOut>>> (lbm,STEP); 
             getLastCudaError("gpuApplyInflow");
 
         // =============================================================================  //
@@ -54,6 +54,8 @@ int main(int argc, char* argv[]) {
 
             gpuReconstructBoundaries<<<numBlocks,threadsPerBlock,0,mainStream>>> (lbm); 
             getLastCudaError("gpuReconstructBoundaries");
+            gpuApplyPeriodicXY<<<numBlocks,threadsPerBlock,0,mainStream>>> (lbm);
+            getLastCudaError("gpuApplyPeriodicXY");
             gpuApplyOutflow<<<numBlocksInOut,threadsPerBlockInOut,0,mainStream>>> (lbm);
             getLastCudaError("gpuApplyOutflow");
 
@@ -64,7 +66,6 @@ int main(int argc, char* argv[]) {
         if (STEP % MACRO_SAVE == 0) {
 
             copyAndSaveToBinary(lbm.phi, NX * NY * NZ, SIM_DIR, SIM_ID, STEP, "phi");
-            //copyAndSaveToBinary(lbm.uz, NX * NY * NZ, SIM_DIR, SIM_ID, STEP, "uz");
 
             std::cout << "Passo " << STEP << ": Dados salvos em " << SIM_DIR << std::endl;
         }

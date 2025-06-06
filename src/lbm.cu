@@ -11,26 +11,34 @@ __global__ void gpuMomCollisionStream(LBMFields d) {
         z == 0 || z == NZ-1) return;
 
     const int idx3 = gpuIdxGlobal3(x,y,z);
-    const int lx = threadIdx.x + 1;
-    const int ly = threadIdx.y + 1;
-    const int lz = threadIdx.z + 1;
-    __shared__ float s_f[FLINKS][BLOCK_SIZE_Z+2][BLOCK_SIZE_Y+2][BLOCK_SIZE_X+2];
-    // finish implementation of shared memory
         
     float fneq[FLINKS];
     float pop[FLINKS];
       
     #pragma unroll FLINKS
     for (int Q = 0; Q < FLINKS; ++Q) {
-        const int idx4 = gpuIdxGlobal4(x,y,z,Q);
-        pop[Q] = d.f[idx4];
+        pop[Q] = __half2float(d.f[gpuIdxGlobal4(x,y,z,Q)]);
     }
 
-    float rho_pre_shift = 0.0f;
-    #pragma unroll FLINKS
-    for (int Q = 0; Q < FLINKS; ++Q) 
-        rho_pre_shift += pop[Q];
-    float rho_val = rho_pre_shift + 1.0f;
+    #ifdef D3Q19
+        float rho_val = (pop[0]  + pop[1]  + pop[2]  + 
+                         pop[3]  + pop[4]  + pop[5]  + 
+                         pop[6]  + pop[7]  + pop[8]  + 
+                         pop[9]  + pop[10] + pop[11] + 
+                         pop[12] + pop[13] + pop[14] + 
+                         pop[15] + pop[16] + pop[17] + 
+                         pop[18]) + 1.0f;
+    #elif defined(D3Q27)
+        float rho_val = (pop[0]  + pop[1]  + pop[2]  + 
+                         pop[3]  + pop[4]  + pop[5]  + 
+                         pop[6]  + pop[7]  + pop[8]  + 
+                         pop[9]  + pop[10] + pop[11] + 
+                         pop[12] + pop[13] + pop[14] + 
+                         pop[15] + pop[16] + pop[17] +  
+                         pop[18] + pop[19] + pop[20] + 
+                         pop[21] + pop[22] + pop[23] + 
+                         pop[24] + pop[25] + pop[26]) + 1.0f;
+    #endif
 
     float inv_rho = 1.0f / rho_val;
 
@@ -62,10 +70,9 @@ __global__ void gpuMomCollisionStream(LBMFields d) {
     #pragma unroll FLINKS
     for (int Q = 0; Q < FLINKS; ++Q) {
         float pre_feq = gpuComputeEquilibria(rho_val,ux_val,uy_val,uz_val,uu,Q);
-        float he_force = COEFF_HE * pre_feq * ((CIX[Q] - ux_val) * ffx_val +
-                                               (CIY[Q] - uy_val) * ffy_val +
-                                               (CIZ[Q] - uz_val) * ffz_val) * inv_rho_cssq;
-        float feq = pre_feq - he_force - W[Q]; 
+        float force_corr = gpuComputeHeForce(pre_feq,ux_val,uy_val,uz_val,ffx_val,ffy_val,ffz_val,inv_rho_cssq,Q);
+        // float force_corr = gpuComputeGuoForce(ux_val,uy_val,uz_val,ffx_val,ffy_val,ffz_val,Q);
+        float feq = pre_feq - force_corr - W[Q];
         fneq[Q] = pop[Q] - feq;
     }
 
@@ -90,9 +97,8 @@ __global__ void gpuMomCollisionStream(LBMFields d) {
         const int yy = y + CIY[Q];
         const int zz = z + CIZ[Q];
         float feq = gpuComputeEquilibria(rho_val,ux_val,uy_val,uz_val,uu,Q) - W[Q];
-        float he_force = COEFF_HE * feq * ( (CIX[Q] - ux_val) * ffx_val +
-                                            (CIY[Q] - uy_val) * ffy_val +
-                                            (CIZ[Q] - uz_val) * ffz_val ) * inv_rho_cssq;
+        float force_corr = gpuComputeHeForce(feq,ux_val,uy_val,uz_val,ffx_val,ffy_val,ffz_val,inv_rho_cssq,Q);
+        // float force_corr = gpuComputeGuoForce(ux_val,uy_val,uz_val,ffx_val,ffy_val,ffz_val,Q);
         float fneq_reg = (W[Q] * 4.5f) * ((CIX[Q]*CIX[Q] - CSSQ) * PXX +
                                           (CIY[Q]*CIY[Q] - CSSQ) * PYY +
                                           (CIZ[Q]*CIZ[Q] - CSSQ) * PZZ +
@@ -100,7 +106,7 @@ __global__ void gpuMomCollisionStream(LBMFields d) {
                                            2.0f * CIX[Q] * CIZ[Q] * PXZ +
                                            2.0f * CIY[Q] * CIZ[Q] * PYZ);
         const int streamed_idx4 = gpuIdxGlobal4(xx,yy,zz,Q);
-        d.f[streamed_idx4] = feq + OMC * fneq_reg + he_force; 
+        d.f[streamed_idx4] = __float2half(feq + OMC * fneq_reg + force_corr); 
     }
 
     // write to global memory

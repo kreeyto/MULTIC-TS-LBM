@@ -17,7 +17,7 @@ __global__ void gpuMomCollisionStream(LBMFields d) {
       
     #pragma unroll FLINKS
     for (int Q = 0; Q < FLINKS; ++Q) {
-        pop[Q] = __half2float(d.f[gpuIdxGlobal4(x,y,z,Q)]);
+        pop[Q] = from_dtype(d.f[gpuIdxGlobal4(x,y,z,Q)]);
     }
 
     #ifdef D3Q19
@@ -108,7 +108,7 @@ __global__ void gpuMomCollisionStream(LBMFields d) {
                                            2.0f * CIX[Q] * CIZ[Q] * PXZ +
                                            2.0f * CIY[Q] * CIZ[Q] * PYZ);
         const int streamed_idx4 = gpuIdxGlobal4(xx,yy,zz,Q);
-        d.f[streamed_idx4] = __float2half(feq + OMC * fneq_reg + force_corr); 
+        d.f[streamed_idx4] = to_dtype(feq + OMC * fneq_reg + force_corr); 
     }
 
     // write to global memory

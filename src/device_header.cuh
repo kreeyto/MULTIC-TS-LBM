@@ -15,7 +15,7 @@ struct LBMFields {
     float *ux, *uy, *uz;
     float *normx, *normy, *normz;
     float *ffx, *ffy, *ffz;
-    __half *f, *g; 
+    dtype *f, *g; 
 };
 
 extern LBMFields lbm;

@@ -14,12 +14,12 @@ __global__ void gpuInitFieldsAndDistributions(LBMFields d) {
     #pragma unroll FLINKS
     for (int Q = 0; Q < FLINKS; ++Q) {
         const int idx4 = gpuIdxGlobal4(x,y,z,Q);
-        d.f[idx4] = __float2half(W[Q] * rho_val - W[Q]);
+        d.f[idx4] = to_dtype(W[Q] * rho_val - W[Q]);
     }
     #pragma unroll GLINKS
     for (int Q = 0; Q < GLINKS; ++Q) {
         const int idx4 = gpuIdxGlobal4(x,y,z,Q);
-        d.g[idx4] = __float2half(W_G[Q] * phi_val - W_G[Q]);
+        d.g[idx4] = to_dtype(W_G[Q] * phi_val - W_G[Q]);
     }
 }
 
@@ -38,8 +38,8 @@ LBMFields lbm;
 
 void initDeviceVars() {
     size_t SIZE =        NX * NY * NZ          * sizeof(float);            
-    size_t F_DIST_SIZE = NX * NY * NZ * FLINKS * sizeof(__half); 
-    size_t G_DIST_SIZE = NX * NY * NZ * GLINKS * sizeof(__half); 
+    size_t F_DIST_SIZE = NX * NY * NZ * FLINKS * sizeof(dtype); 
+    size_t G_DIST_SIZE = NX * NY * NZ * GLINKS * sizeof(dtype); 
 
     checkCudaErrors(cudaMalloc(&lbm.phi,   SIZE));
     checkCudaErrors(cudaMalloc(&lbm.rho,   SIZE));

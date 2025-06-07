@@ -1,6 +1,6 @@
 #include "kernels.cuh"
 
-#define INFLOW_CASE_THREE
+#define INFLOW_CASE_ONE
 
 __global__ void gpuApplyInflow(LBMFields d, const int STEP) {
     const int x = threadIdx.x + blockIdx.x * blockDim.x;
@@ -60,7 +60,7 @@ __global__ void gpuApplyInflow(LBMFields d, const int STEP) {
         const int zz = z + CIZ[Q];
         float feq = gpuComputeEquilibria(rho_val,0.0f,0.0f,uz_in,uu,Q) - W[Q];
         const int streamed_idx4 = gpuIdxGlobal4(xx,yy,zz,Q);
-        d.f[streamed_idx4] = __float2half(feq);
+        d.f[streamed_idx4] = to_dtype(feq);
     }
     #pragma unroll GLINKS
     for (int Q = 0; Q < GLINKS; ++Q) {
@@ -69,7 +69,7 @@ __global__ void gpuApplyInflow(LBMFields d, const int STEP) {
         const int zz = z + CIZ[Q];
         float geq = gpuComputeTruncatedEquilibria(phi_in,0.0f,0.0f,uz_in,Q) - W_G[Q];
         const int streamed_idx4 = gpuIdxGlobal4(xx,yy,zz,Q);
-        d.g[streamed_idx4] = __float2half(geq);
+        d.g[streamed_idx4] = to_dtype(geq);
     }
 }
 
@@ -94,7 +94,7 @@ __global__ void gpuReconstructBoundaries(LBMFields d) {
         const int zz = z + CIZ[Q];
         if (xx >= 0 && xx < NX && yy >= 0 && yy < NY && zz >= 0 && zz < NZ) {
             const int streamed_idx4 = gpuIdxGlobal4(xx,yy,zz,Q);
-            d.f[streamed_idx4] = __float2half(W[Q] * d.rho[idx3] - W[Q]);
+            d.f[streamed_idx4] = to_dtype(W[Q] * d.rho[idx3] - W[Q]);
         }
     }
     #pragma unroll GLINKS
@@ -104,7 +104,7 @@ __global__ void gpuReconstructBoundaries(LBMFields d) {
         const int zz = z + CIZ[Q];
         if (xx >= 0 && xx < NX && yy >= 0 && yy < NY && zz >= 0 && zz < NZ) {
             const int streamed_idx4 = gpuIdxGlobal4(xx,yy,zz,Q);
-            d.g[streamed_idx4] = __float2half(W_G[Q] * d.phi[idx3] - W_G[Q]);
+            d.g[streamed_idx4] = to_dtype(W_G[Q] * d.phi[idx3] - W_G[Q]);
         }
     }
 }
@@ -118,18 +118,16 @@ __global__ void gpuApplyPeriodicXY(LBMFields d) {
 
     if (x == 0 || x == NX-1) {
         const int from_x = (x == 0) ? NX - 2 : 1;
-        const int idx3_target = gpuIdxGlobal3(x, y, z);
-        const int idx3_source = gpuIdxGlobal3(from_x, y, z);
-
+        const int idx3_target = gpuIdxGlobal3(x,y,z);
+        const int idx3_source = gpuIdxGlobal3(from_x,y,z);
         d.phi[idx3_target] = d.phi[idx3_source];
         d.rho[idx3_target] = d.rho[idx3_source];
-    }
+    }   
 
     if (y == 0 || y == NY-1) {
         const int from_y = (y == 0) ? NY - 2 : 1;
-        const int idx3_target = gpuIdxGlobal3(x, y, z);
-        const int idx3_source = gpuIdxGlobal3(x, from_y, z);
-
+        const int idx3_target = gpuIdxGlobal3(x,y,z);
+        const int idx3_source = gpuIdxGlobal3(x,from_y,z);
         d.phi[idx3_target] = d.phi[idx3_source];
         d.rho[idx3_target] = d.rho[idx3_source];
     }

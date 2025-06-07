@@ -13,13 +13,10 @@ __global__ void gpuEvolvePhaseField(LBMFields d) {
     const int idx3 = gpuIdxGlobal3(x,y,z);
 
     float pop[GLINKS];
-    pop[0] = __half2float(d.g[gpuIdxGlobal4(x,y,z,0)]);
-    pop[1] = __half2float(d.g[gpuIdxGlobal4(x,y,z,1)]);
-    pop[2] = __half2float(d.g[gpuIdxGlobal4(x,y,z,2)]);
-    pop[3] = __half2float(d.g[gpuIdxGlobal4(x,y,z,3)]);
-    pop[4] = __half2float(d.g[gpuIdxGlobal4(x,y,z,4)]);
-    pop[5] = __half2float(d.g[gpuIdxGlobal4(x,y,z,5)]);
-    pop[6] = __half2float(d.g[gpuIdxGlobal4(x,y,z,6)]);
+    #pragma unroll GLINKS
+    for (int Q = 0; Q < GLINKS; ++Q) {
+        pop[Q] = from_dtype(d.g[gpuIdxGlobal4(x,y,z,Q)]);
+    }
 
     float ux_val = d.ux[idx3];
     float uy_val = d.uy[idx3];
@@ -61,10 +58,10 @@ __global__ void gpuEvolvePhaseField(LBMFields d) {
         float geq = gpuComputeTruncatedEquilibria(phi_val,ux_val,uy_val,uz_val,Q) - W_G[Q];
         float anti_diff = W_G[Q] * phi_norm * (CIX[Q] * normx_val + CIY[Q] * normy_val + CIZ[Q] * normz_val);
         const int streamed_idx4 = gpuIdxGlobal4(xx,yy,zz,Q);
-        d.g[streamed_idx4] = __float2half(geq + anti_diff);
+        d.g[streamed_idx4] = to_dtype(geq + anti_diff);
     }
     
     d.ffx[idx3] = ffx_val;
     d.ffy[idx3] = ffy_val;
     d.ffz[idx3] = ffz_val;
-}
+} 

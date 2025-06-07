@@ -1,11 +1,23 @@
 #pragma once
 
+// fp16 precision for the distributions?
+#ifdef FP16_COMPRESSION
+    #include <cuda_fp16.h>
+    typedef __half dtype;
+    #define to_dtype __float2half
+    #define from_dtype __half2float
+#else
+    typedef float dtype;
+    #define to_dtype(x) (x)
+    #define from_dtype(x) (x)
+#endif
+
 // first distribution velocity set is dealt by compile flags
 // scalar field related velocity set is set here
 #define G_D3Q7
 
-//#define RUN_MODE
-#define SAMPLE_MODE
+#define RUN_MODE
+//#define SAMPLE_MODE
 //#define DEBUG_MODE
 
 #define PERTURBATION
@@ -15,25 +27,25 @@
 #define BLOCK_SIZE_Z 8
 
 // domain size
-constexpr int MESH = 64;
-constexpr int DIAM = 10; 
+constexpr int MESH = 128;
+constexpr int DIAM = 12.8; 
 constexpr int NX   = MESH;
 constexpr int NY   = MESH;
 constexpr int NZ   = MESH*2;
 
 // jet velocity
-constexpr float U_JET = 0.05; 
+constexpr float U_JET = 0.01; 
 
 // adimensional parameters
 constexpr int REYNOLDS = 5000; 
-constexpr int WEBER    = 500; 
+constexpr int WEBER    = 10; 
 
 // general model parameters
 constexpr float VISC     = (U_JET * DIAM) / REYNOLDS;      // kinematic viscosity
 constexpr float TAU      = 0.5f + 3.0f * VISC;             // relaxation time
 constexpr float CSSQ     = 1.0f / 3.0f;                    // square of speed of sound
 constexpr float OMEGA    = 1.0f / TAU;                     // relaxation frequency
-constexpr float GAMMA    = 0.15f * 3.0f;                   // sharpening of the interface
+constexpr float GAMMA    = 0.15f * 7.0f;                   // sharpening of the interface
 constexpr float SIGMA    = (U_JET * U_JET * DIAM) / WEBER; // surface tension coefficient
 
 // auxiliary constants
@@ -97,10 +109,10 @@ constexpr float COEFF_FORCE = 0.5f;         // fixed approximation of (1-omega/2
 #endif
 
 #ifdef RUN_MODE
-    constexpr int MACRO_SAVE = 100, NSTEPS = 30000;
+    constexpr int MACRO_SAVE = 100, NSTEPS = 100000;
 #elif defined(SAMPLE_MODE)
     constexpr int MACRO_SAVE = 100, NSTEPS = 1000;
 #elif defined(DEBUG_MODE)
-    constexpr int MACRO_SAVE = 1, NSTEPS = 0;
+    constexpr int MACRO_SAVE = 1, NSTEPS = 10;
 #endif
 

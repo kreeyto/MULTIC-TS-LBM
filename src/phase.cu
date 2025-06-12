@@ -10,12 +10,12 @@ __global__ void gpuEvolvePhaseField(LBMFields d) {
         y == 0 || y == NY-1 || 
         z == 0 || z == NZ-1) return;
 
-    const int idx3 = gpuIdxGlobal3(x,y,z);
+    const int idx3 = gpu_idx_global3(x,y,z);
 
     float pop[GLINKS];
     #pragma unroll GLINKS
     for (int Q = 0; Q < GLINKS; ++Q) {
-        pop[Q] = from_dtype(d.g[gpuIdxGlobal4(x,y,z,Q)]);
+        pop[Q] = d.g[gpu_idx_global4(x,y,z,Q)];
     }
 
     float ux_val = d.ux[idx3];
@@ -25,9 +25,9 @@ __global__ void gpuEvolvePhaseField(LBMFields d) {
         
     d.phi[idx3] = phi_val;
 
-    float gradx = 0.375f * (d.phi[gpuIdxGlobal3(x+1,y,z)] - d.phi[gpuIdxGlobal3(x-1,y,z)]);
-    float grady = 0.375f * (d.phi[gpuIdxGlobal3(x,y+1,z)] - d.phi[gpuIdxGlobal3(x,y-1,z)]);
-    float gradz = 0.375f * (d.phi[gpuIdxGlobal3(x,y,z+1)] - d.phi[gpuIdxGlobal3(x,y,z-1)]);
+    float gradx = 0.375f * (d.phi[gpu_idx_global3(x+1,y,z)] - d.phi[gpu_idx_global3(x-1,y,z)]);
+    float grady = 0.375f * (d.phi[gpu_idx_global3(x,y+1,z)] - d.phi[gpu_idx_global3(x,y-1,z)]);
+    float gradz = 0.375f * (d.phi[gpu_idx_global3(x,y,z+1)] - d.phi[gpu_idx_global3(x,y,z-1)]);
 
     float grad2 = gradx*gradx + grady*grady + gradz*gradz;
     float mag = rsqrtf(grad2 + 1e-6f);
@@ -39,9 +39,9 @@ __global__ void gpuEvolvePhaseField(LBMFields d) {
     d.normy[idx3] = normy_val;
     d.normz[idx3] = normz_val;
 
-    float curvature = -0.375f * (d.normx[gpuIdxGlobal3(x+1,y,z)] - d.normx[gpuIdxGlobal3(x-1,y,z)] +
-                                 d.normy[gpuIdxGlobal3(x,y+1,z)] - d.normy[gpuIdxGlobal3(x,y-1,z)] +
-                                 d.normz[gpuIdxGlobal3(x,y,z+1)] - d.normz[gpuIdxGlobal3(x,y,z-1)]);
+    float curvature = -0.375f * (d.normx[gpu_idx_global3(x+1,y,z)] - d.normx[gpu_idx_global3(x-1,y,z)] +
+                                 d.normy[gpu_idx_global3(x,y+1,z)] - d.normy[gpu_idx_global3(x,y-1,z)] +
+                                 d.normz[gpu_idx_global3(x,y,z+1)] - d.normz[gpu_idx_global3(x,y,z-1)]);
 
     float ind_val = grad2 * mag;
     float coeff_force = SIGMA * curvature;
@@ -55,10 +55,10 @@ __global__ void gpuEvolvePhaseField(LBMFields d) {
         const int xx = x + CIX[Q];
         const int yy = y + CIY[Q];
         const int zz = z + CIZ[Q];
-        float geq = gpuComputeTruncatedEquilibria(phi_val,ux_val,uy_val,uz_val,Q) - W_G[Q];
+        float geq = gpu_compute_truncated_equilibria(phi_val,ux_val,uy_val,uz_val,Q) - W_G[Q];
         float anti_diff = W_G[Q] * phi_norm * (CIX[Q] * normx_val + CIY[Q] * normy_val + CIZ[Q] * normz_val);
-        const int streamed_idx4 = gpuIdxGlobal4(xx,yy,zz,Q);
-        d.g[streamed_idx4] = to_dtype(geq + anti_diff);
+        const int streamed_idx4 = gpu_idx_global4(xx,yy,zz,Q);
+        d.g[streamed_idx4] = geq + anti_diff;
     }
     
     d.ffx[idx3] = ffx_val;

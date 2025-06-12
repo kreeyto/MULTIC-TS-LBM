@@ -10,14 +10,13 @@ __global__ void gpuMomCollisionStream(LBMFields d) {
         y == 0 || y == NY-1 || 
         z == 0 || z == NZ-1) return;
 
-    const int idx3 = gpuIdxGlobal3(x,y,z);
+    const int idx3 = gpu_idx_global3(x,y,z);
         
-    float fneq[FLINKS];
     float pop[FLINKS];
       
     #pragma unroll FLINKS
     for (int Q = 0; Q < FLINKS; ++Q) {
-        pop[Q] = from_dtype(d.f[gpuIdxGlobal4(x,y,z,Q)]);
+        pop[Q] = from_dtype(d.f[gpu_idx_global4(x,y,z,Q)]);
     }
 
     #ifdef D3Q19
@@ -67,9 +66,10 @@ __global__ void gpuMomCollisionStream(LBMFields d) {
     float uu = 1.5f * (ux_val*ux_val + uy_val*uy_val + uz_val*uz_val);
     float inv_rho_cssq = 3.0f * inv_rho;
 
+    float fneq[FLINKS];
     #pragma unroll FLINKS
     for (int Q = 0; Q < FLINKS; ++Q) {
-        float pre_feq = gpuComputeEquilibria(rho_val,ux_val,uy_val,uz_val,uu,Q);
+        float pre_feq = gpu_compute_equilibria(rho_val,ux_val,uy_val,uz_val,uu,Q);
         float force_corr = COEFF_FORCE * pre_feq * ( (CIX[Q] - ux_val) * ffx_val +
                                                      (CIY[Q] - uy_val) * ffy_val +
                                                      (CIZ[Q] - uz_val) * ffz_val ) * inv_rho_cssq;
@@ -97,7 +97,7 @@ __global__ void gpuMomCollisionStream(LBMFields d) {
         const int xx = x + CIX[Q];
         const int yy = y + CIY[Q];
         const int zz = z + CIZ[Q];
-        float feq = gpuComputeEquilibria(rho_val,ux_val,uy_val,uz_val,uu,Q) - W[Q];
+        float feq = gpu_compute_equilibria(rho_val,ux_val,uy_val,uz_val,uu,Q) - W[Q];
         float force_corr = COEFF_FORCE * feq * ( (CIX[Q] - ux_val) * ffx_val +
                                                  (CIY[Q] - uy_val) * ffy_val +
                                                  (CIZ[Q] - uz_val) * ffz_val ) * inv_rho_cssq;
@@ -107,7 +107,7 @@ __global__ void gpuMomCollisionStream(LBMFields d) {
                                            2.0f * CIX[Q] * CIY[Q] * PXY +
                                            2.0f * CIX[Q] * CIZ[Q] * PXZ +
                                            2.0f * CIY[Q] * CIZ[Q] * PYZ);
-        const int streamed_idx4 = gpuIdxGlobal4(xx,yy,zz,Q);
+        const int streamed_idx4 = gpu_idx_global4(xx,yy,zz,Q);
         d.f[streamed_idx4] = to_dtype(feq + OMC * fneq_reg + force_corr); 
     }
 

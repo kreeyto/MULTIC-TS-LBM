@@ -18,7 +18,7 @@ fi
 if [ "$VELOCITY_SET" = "D3Q27" ]; then
     MAXRREG=128 
 elif [ "$VELOCITY_SET" = "D3Q19" ]; then
-    MAXRREG=91
+    MAXRREG=107 # was 91
 fi
 
 BASE_DIR=$(dirname "$0")

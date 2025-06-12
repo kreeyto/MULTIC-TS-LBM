@@ -6,20 +6,20 @@ __global__ void gpuInitFieldsAndDistributions(LBMFields d) {
     const int z = threadIdx.z + blockIdx.z * blockDim.z;
 
     if (x >= NX || y >= NY || z >= NZ) return;
-    const int idx3 = gpuIdxGlobal3(x,y,z);
+    const int idx3 = gpu_idx_global3(x,y,z);
 
     d.rho[idx3] = 1.0f;
     float rho_val = d.rho[idx3];
     float phi_val = d.phi[idx3];
     #pragma unroll FLINKS
     for (int Q = 0; Q < FLINKS; ++Q) {
-        const int idx4 = gpuIdxGlobal4(x,y,z,Q);
+        const int idx4 = gpu_idx_global4(x,y,z,Q);
         d.f[idx4] = to_dtype(W[Q] * rho_val - W[Q]);
     }
     #pragma unroll GLINKS
     for (int Q = 0; Q < GLINKS; ++Q) {
-        const int idx4 = gpuIdxGlobal4(x,y,z,Q);
-        d.g[idx4] = to_dtype(W_G[Q] * phi_val - W_G[Q]);
+        const int idx4 = gpu_idx_global4(x,y,z,Q);
+        d.g[idx4] = W_G[Q] * phi_val - W_G[Q];
     }
 }
 
@@ -39,7 +39,7 @@ LBMFields lbm;
 void initDeviceVars() {
     size_t SIZE =        NX * NY * NZ          * sizeof(float);            
     size_t F_DIST_SIZE = NX * NY * NZ * FLINKS * sizeof(dtype); 
-    size_t G_DIST_SIZE = NX * NY * NZ * GLINKS * sizeof(dtype); 
+    size_t G_DIST_SIZE = NX * NY * NZ * GLINKS * sizeof(float); 
 
     checkCudaErrors(cudaMalloc(&lbm.phi,   SIZE));
     checkCudaErrors(cudaMalloc(&lbm.rho,   SIZE));

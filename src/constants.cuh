@@ -1,6 +1,7 @@
 #pragma once
 
-// fp16 precision for the distributions?
+#define FP16_COMPRESSION
+// fp16 precision for the hydrodynamic distribution
 #ifdef FP16_COMPRESSION
     #include <cuda_fp16.h>
     typedef __half dtype;
@@ -10,7 +11,9 @@
     typedef float dtype;
     #define to_dtype(x) (x)
     #define from_dtype(x) (x)
-#endif
+#endif // FP16_COMPRESSION
+
+// ====================================================================================================================  //
 
 // first distribution velocity set is dealt by compile flags
 // scalar field related velocity set is set here
@@ -28,17 +31,17 @@
 
 // domain size
 constexpr int MESH = 128;
-constexpr int DIAM = 12.8; 
+constexpr int DIAM = 19; 
 constexpr int NX   = MESH;
 constexpr int NY   = MESH;
-constexpr int NZ   = MESH*2;
+constexpr int NZ   = MESH*3;
 
 // jet velocity
-constexpr float U_JET = 0.01; 
+constexpr float U_JET = 0.05; 
 
 // adimensional parameters
 constexpr int REYNOLDS = 5000; 
-constexpr int WEBER    = 10; 
+constexpr int WEBER    = 500; 
 
 // general model parameters
 constexpr float VISC     = (U_JET * DIAM) / REYNOLDS;      // kinematic viscosity
@@ -109,10 +112,10 @@ constexpr float COEFF_FORCE = 0.5f;         // fixed approximation of (1-omega/2
 #endif
 
 #ifdef RUN_MODE
-    constexpr int MACRO_SAVE = 100, NSTEPS = 100000;
+    constexpr int MACRO_SAVE = 100, NSTEPS = 30000;
 #elif defined(SAMPLE_MODE)
     constexpr int MACRO_SAVE = 100, NSTEPS = 1000;
 #elif defined(DEBUG_MODE)
-    constexpr int MACRO_SAVE = 1, NSTEPS = 10;
+    constexpr int MACRO_SAVE = 1, NSTEPS = 0;
 #endif
 

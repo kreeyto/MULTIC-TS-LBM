@@ -19,6 +19,8 @@ struct LBMFields {
     float *g; 
 };
 
+// add vorticity magnitude, qcriterion?, passive scalar transport, fix inlet flattening 
+
 extern LBMFields lbm;
 
 void initDeviceVars();

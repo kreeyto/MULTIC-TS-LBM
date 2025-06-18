@@ -86,11 +86,11 @@ __global__ void gpuMomCollisionStream(LBMFields d) {
         fneq[Q] = pop[Q] - feq;
     }
 
-    float PXX = fneq[1]  + fneq[2]  + fneq[7]  + fneq[8]  + fneq[9]  + fneq[10] + fneq[13] + fneq[14] + fneq[15] + fneq[16];
-    float PYY = fneq[3]  + fneq[4]  + fneq[7]  + fneq[8]  + fneq[11] + fneq[12] + fneq[13] + fneq[14] + fneq[17] + fneq[18];
-    float PZZ = fneq[5]  + fneq[6]  + fneq[9]  + fneq[10] + fneq[11] + fneq[12] + fneq[15] + fneq[16] + fneq[17] + fneq[18];
-    float PXY = fneq[7]  - fneq[13] + fneq[8]  - fneq[14];
-    float PXZ = fneq[9]  - fneq[15] + fneq[10] - fneq[16];
+    float PXX = fneq[1] + fneq[2] + fneq[7] + fneq[8] + fneq[9] + fneq[10] + fneq[13] + fneq[14] + fneq[15] + fneq[16];
+    float PYY = fneq[3] + fneq[4] + fneq[7] + fneq[8] + fneq[11] + fneq[12] + fneq[13] + fneq[14] + fneq[17] + fneq[18];
+    float PZZ = fneq[5] + fneq[6] + fneq[9] + fneq[10] + fneq[11] + fneq[12] + fneq[15] + fneq[16] + fneq[17] + fneq[18];
+    float PXY = fneq[7] - fneq[13] + fneq[8] - fneq[14];
+    float PXZ = fneq[9] - fneq[15] + fneq[10] - fneq[16];
     float PYZ = fneq[11] - fneq[17] + fneq[12] - fneq[18];
     #ifdef D3Q27
     PXX += fneq[19] + fneq[20] + fneq[21] + fneq[22] + fneq[23] + fneq[24] + fneq[25] + fneq[26];

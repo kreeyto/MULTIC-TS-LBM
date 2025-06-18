@@ -16,7 +16,7 @@ fi
 
 # least register value without spills
 if [ "$VELOCITY_SET" = "D3Q27" ]; then
-    MAXRREG=128 
+    MAXRREG=128
 elif [ "$VELOCITY_SET" = "D3Q19" ]; then
     MAXRREG=104
 fi

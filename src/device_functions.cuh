@@ -1,7 +1,8 @@
 #pragma once
 #include "common.cuh"
 
-#define SECOND_ORDER 
+//#define SECOND_ORDER
+#define THIRD_ORDER   
 
 __device__ __forceinline__ int gpu_idx_global3(const int x, const int y, const int z) {
     return x + y * NX + z * NX * NY;

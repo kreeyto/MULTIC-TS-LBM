@@ -19,9 +19,9 @@
 // scalar field related velocity set is set here
 #define G_D3Q7
 
-#define RUN_MODE
+//#define RUN_MODE
 //#define SAMPLE_MODE
-//#define DEBUG_MODE
+#define DEBUG_MODE
 
 #define PERTURBATION
 
@@ -35,18 +35,18 @@ constexpr int TILE_Y = BLOCK_SIZE_Y + 2;
 constexpr int TILE_Z = BLOCK_SIZE_Z + 2;
 
 // domain size
-constexpr int MESH = 150;
-constexpr int DIAM = 15; 
+constexpr int MESH = 200;
+constexpr int DIAM = 20; 
 constexpr int NX   = MESH;
 constexpr int NY   = MESH;
 constexpr int NZ   = MESH*2;
 
 // jet velocity
-constexpr float U_JET = 0.01; 
+constexpr float U_JET = 0.05; 
 
 // adimensional parameters
 constexpr int REYNOLDS = 5000; 
-constexpr int WEBER    = 10; 
+constexpr int WEBER    = 500; 
 
 // general model parameters
 constexpr float VISC     = (U_JET * DIAM) / REYNOLDS;      // kinematic viscosity
@@ -117,7 +117,7 @@ constexpr float COEFF_FORCE = 0.5f;         // fixed approximation of (1-omega/2
 #endif
 
 #ifdef RUN_MODE
-    constexpr int MACRO_SAVE = 100, NSTEPS = 60000;
+    constexpr int MACRO_SAVE = 100, NSTEPS = 30000;
 #elif defined(SAMPLE_MODE)
     constexpr int MACRO_SAVE = 100, NSTEPS = 1000;
 #elif defined(DEBUG_MODE)

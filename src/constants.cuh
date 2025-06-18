@@ -29,19 +29,24 @@
 #define BLOCK_SIZE_Y 8
 #define BLOCK_SIZE_Z 8
 
+// tiling for shared memory (if necessary)
+constexpr int TILE_X = BLOCK_SIZE_X + 2;
+constexpr int TILE_Y = BLOCK_SIZE_Y + 2;
+constexpr int TILE_Z = BLOCK_SIZE_Z + 2;
+
 // domain size
-constexpr int MESH = 128;
-constexpr int DIAM = 19; 
+constexpr int MESH = 150;
+constexpr int DIAM = 15; 
 constexpr int NX   = MESH;
 constexpr int NY   = MESH;
-constexpr int NZ   = MESH*3;
+constexpr int NZ   = MESH*2;
 
 // jet velocity
-constexpr float U_JET = 0.05; 
+constexpr float U_JET = 0.01; 
 
 // adimensional parameters
 constexpr int REYNOLDS = 5000; 
-constexpr int WEBER    = 500; 
+constexpr int WEBER    = 10; 
 
 // general model parameters
 constexpr float VISC     = (U_JET * DIAM) / REYNOLDS;      // kinematic viscosity
@@ -112,7 +117,7 @@ constexpr float COEFF_FORCE = 0.5f;         // fixed approximation of (1-omega/2
 #endif
 
 #ifdef RUN_MODE
-    constexpr int MACRO_SAVE = 100, NSTEPS = 30000;
+    constexpr int MACRO_SAVE = 100, NSTEPS = 60000;
 #elif defined(SAMPLE_MODE)
     constexpr int MACRO_SAVE = 100, NSTEPS = 1000;
 #elif defined(DEBUG_MODE)

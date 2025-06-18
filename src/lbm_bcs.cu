@@ -1,6 +1,6 @@
 #include "kernels.cuh"
 
-#define INFLOW_CASE_ONE
+#define INFLOW_CASE_THREE
 
 __global__ void gpuApplyInflow(LBMFields d, const int STEP) {
     const int x = threadIdx.x + blockIdx.x * blockDim.x;

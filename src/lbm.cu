@@ -13,47 +13,56 @@ __global__ void gpuMomCollisionStream(LBMFields d) {
     const int idx3 = gpu_idx_global3(x,y,z);
         
     float pop[FLINKS];
-      
-    #pragma unroll FLINKS
-    for (int Q = 0; Q < FLINKS; ++Q) {
-        pop[Q] = from_dtype(d.f[gpu_idx_global4(x,y,z,Q)]);
-    }
+    pop[ 0] = from_dtype(d.f[gpu_idx_global4(x,y,z, 0)]);
+    pop[ 1] = from_dtype(d.f[gpu_idx_global4(x,y,z, 1)]);
+    pop[ 2] = from_dtype(d.f[gpu_idx_global4(x,y,z, 2)]);
+    pop[ 3] = from_dtype(d.f[gpu_idx_global4(x,y,z, 3)]);
+    pop[ 4] = from_dtype(d.f[gpu_idx_global4(x,y,z, 4)]);
+    pop[ 5] = from_dtype(d.f[gpu_idx_global4(x,y,z, 5)]); 
+    pop[ 6] = from_dtype(d.f[gpu_idx_global4(x,y,z, 6)]);
+    pop[ 7] = from_dtype(d.f[gpu_idx_global4(x,y,z, 7)]);
+    pop[ 8] = from_dtype(d.f[gpu_idx_global4(x,y,z, 8)]);
+    pop[ 9] = from_dtype(d.f[gpu_idx_global4(x,y,z, 9)]);
+    pop[10] = from_dtype(d.f[gpu_idx_global4(x,y,z,10)]);
+    pop[11] = from_dtype(d.f[gpu_idx_global4(x,y,z,11)]);
+    pop[12] = from_dtype(d.f[gpu_idx_global4(x,y,z,12)]);
+    pop[13] = from_dtype(d.f[gpu_idx_global4(x,y,z,13)]);
+    pop[14] = from_dtype(d.f[gpu_idx_global4(x,y,z,14)]);
+    pop[15] = from_dtype(d.f[gpu_idx_global4(x,y,z,15)]);
+    pop[16] = from_dtype(d.f[gpu_idx_global4(x,y,z,16)]);
+    pop[17] = from_dtype(d.f[gpu_idx_global4(x,y,z,17)]);
+    pop[18] = from_dtype(d.f[gpu_idx_global4(x,y,z,18)]);
+    #ifdef D3Q27
+    pop[19] = from_dtype(d.f[gpu_idx_global4(x,y,z,19)]);
+    pop[20] = from_dtype(d.f[gpu_idx_global4(x,y,z,20)]);
+    pop[21] = from_dtype(d.f[gpu_idx_global4(x,y,z,21)]);
+    pop[22] = from_dtype(d.f[gpu_idx_global4(x,y,z,22)]);
+    pop[23] = from_dtype(d.f[gpu_idx_global4(x,y,z,23)]);
+    pop[24] = from_dtype(d.f[gpu_idx_global4(x,y,z,24)]);
+    pop[25] = from_dtype(d.f[gpu_idx_global4(x,y,z,25)]);
+    pop[26] = from_dtype(d.f[gpu_idx_global4(x,y,z,26)]);
+    #endif // D3Q27
 
     #ifdef D3Q19
-        float rho_val = (pop[0]  + pop[1]  + pop[2]  + 
-                         pop[3]  + pop[4]  + pop[5]  + 
-                         pop[6]  + pop[7]  + pop[8]  + 
-                         pop[9]  + pop[10] + pop[11] + 
-                         pop[12] + pop[13] + pop[14] + 
-                         pop[15] + pop[16] + pop[17] + 
-                         pop[18]) + 1.0f;
+        float rho_val = (pop[0] + pop[1] + pop[2] + pop[3] + pop[4] + pop[5] + pop[6] + pop[7] + pop[8] + pop[9] + pop[10] + pop[11] + pop[12] + pop[13] + pop[14] + pop[15] + pop[16] + pop[17] + pop[18]) + 1.0f;
     #elif defined(D3Q27)
-        float rho_val = (pop[0]  + pop[1]  + pop[2]  + 
-                         pop[3]  + pop[4]  + pop[5]  + 
-                         pop[6]  + pop[7]  + pop[8]  + 
-                         pop[9]  + pop[10] + pop[11] + 
-                         pop[12] + pop[13] + pop[14] + 
-                         pop[15] + pop[16] + pop[17] +  
-                         pop[18] + pop[19] + pop[20] + 
-                         pop[21] + pop[22] + pop[23] + 
-                         pop[24] + pop[25] + pop[26]) + 1.0f;
+        float rho_val = (pop[0] + pop[1] + pop[2] + pop[3] + pop[4] + pop[5] + pop[6] + pop[7] + pop[8] + pop[9] + pop[10] + pop[11] + pop[12] + pop[13] + pop[14] + pop[15] + pop[16] + pop[17] + pop[18] + pop[19] + pop[20] + pop[21] + pop[22] + pop[23] + pop[24] + pop[25] + pop[26]) + 1.0f;
     #endif
 
     float inv_rho = 1.0f / rho_val;
-
-    #ifdef D3Q19
-        float sum_ux = inv_rho * (pop[1] - pop[2] + pop[7] - pop[8]  + pop[9]  - pop[10] + pop[13] - pop[14] + pop[15] - pop[16]);
-        float sum_uy = inv_rho * (pop[3] - pop[4] + pop[7] - pop[8]  + pop[11] - pop[12] + pop[14] - pop[13] + pop[17] - pop[18]);
-        float sum_uz = inv_rho * (pop[5] - pop[6] + pop[9] - pop[10] + pop[11] - pop[12] + pop[16] - pop[15] + pop[18] - pop[17]);
-    #elif defined(D3Q27)
-        float sum_ux = inv_rho * (pop[1] - pop[2] + pop[7] - pop[8]  + pop[9]  - pop[10] + pop[13] - pop[14] + pop[15] - pop[16] + pop[19] - pop[20] + pop[21] - pop[22] + pop[23] - pop[24] + pop[26] - pop[25]);
-        float sum_uy = inv_rho * (pop[3] - pop[4] + pop[7] - pop[8]  + pop[11] - pop[12] + pop[14] - pop[13] + pop[17] - pop[18] + pop[19] - pop[20] + pop[21] - pop[22] + pop[24] - pop[23] + pop[25] - pop[26]);
-        float sum_uz = inv_rho * (pop[5] - pop[6] + pop[9] - pop[10] + pop[11] - pop[12] + pop[16] - pop[15] + pop[18] - pop[17] + pop[19] - pop[20] + pop[22] - pop[21] + pop[23] - pop[24] + pop[25] - pop[26]);
-    #endif
-
     float ffx_val = d.ffx[idx3];
     float ffy_val = d.ffy[idx3];
     float ffz_val = d.ffz[idx3];
+
+    #ifdef D3Q19
+        float sum_ux = inv_rho * (pop[1] - pop[2] + pop[7] - pop[8] + pop[9] - pop[10] + pop[13] - pop[14] + pop[15] - pop[16]);
+        float sum_uy = inv_rho * (pop[3] - pop[4] + pop[7] - pop[8] + pop[11] - pop[12] + pop[14] - pop[13] + pop[17] - pop[18]);
+        float sum_uz = inv_rho * (pop[5] - pop[6] + pop[9] - pop[10] + pop[11] - pop[12] + pop[16] - pop[15] + pop[18] - pop[17]);
+    #elif defined(D3Q27)
+        float sum_ux = inv_rho * (pop[1] - pop[2] + pop[7] - pop[8] + pop[9] - pop[10] + pop[13] - pop[14] + pop[15] - pop[16] + pop[19] - pop[20] + pop[21] - pop[22] + pop[23] - pop[24] + pop[26] - pop[25]);
+        float sum_uy = inv_rho * (pop[3] - pop[4] + pop[7] - pop[8]  + pop[11] - pop[12] + pop[14] - pop[13] + pop[17] - pop[18] + pop[19] - pop[20] + pop[21] - pop[22] + pop[24] - pop[23] + pop[25] - pop[26]);
+        float sum_uz = inv_rho * (pop[5] - pop[6] + pop[9] - pop[10] + pop[11] - pop[12] + pop[16] - pop[15] + pop[18] - pop[17] + pop[19] - pop[20] + pop[22] - pop[21] + pop[23] - pop[24] + pop[25] - pop[26]);
+    #endif
 
     float fx_corr = ffx_val * 0.5f * inv_rho;
     float fy_corr = ffy_val * 0.5f * inv_rho;

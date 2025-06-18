@@ -9,19 +9,17 @@ __global__ void gpuInitFieldsAndDistributions(LBMFields d) {
     const int idx3 = gpu_idx_global3(x,y,z);
 
     d.rho[idx3] = 1.0f;
-    float rho_val = d.rho[idx3];
-    float phi_val = d.phi[idx3];
     #pragma unroll FLINKS
     for (int Q = 0; Q < FLINKS; ++Q) {
         const int idx4 = gpu_idx_global4(x,y,z,Q);
-        d.f[idx4] = to_dtype(W[Q] * rho_val - W[Q]);
+        d.f[idx4] = to_dtype(W[Q] * d.rho[idx3] - W[Q]);
     }
     #pragma unroll GLINKS
     for (int Q = 0; Q < GLINKS; ++Q) {
         const int idx4 = gpu_idx_global4(x,y,z,Q);
-        d.g[idx4] = W_G[Q] * phi_val - W_G[Q];
+        d.g[idx4] = W_G[Q] * d.phi[idx3] - W_G[Q];
     }
-}
+} 
 
 __constant__ float W[FLINKS];
 __constant__ float W_G[GLINKS];

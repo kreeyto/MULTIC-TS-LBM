@@ -1,17 +1,21 @@
 #pragma once
 
 #define FP16_COMPRESSION
+
 // fp16 precision for the hydrodynamic distribution
 #ifdef FP16_COMPRESSION
     #include <cuda_fp16.h>
-    typedef __half dtype;
+    typedef __half dtype_t;
     #define to_dtype __float2half
     #define from_dtype __half2float
 #else
-    typedef float dtype;
+    typedef float dtype_t;
     #define to_dtype(x) (x)
     #define from_dtype(x) (x)
 #endif // FP16_COMPRESSION
+
+typedef int ci_t;
+typedef int idx_t;
 
 // ====================================================================================================================  //
 
@@ -20,23 +24,25 @@
 #define G_D3Q7
 
 //#define RUN_MODE
-//#define SAMPLE_MODE
-#define DEBUG_MODE
+#define SAMPLE_MODE
+//#define DEBUG_MODE
 
 #define PERTURBATION
 
-#define BLOCK_SIZE_X 8
-#define BLOCK_SIZE_Y 8
-#define BLOCK_SIZE_Z 8
+constexpr int BLOCK_SIZE_X = 8;
+constexpr int BLOCK_SIZE_Y = 8;
+constexpr int BLOCK_SIZE_Z = 8;
 
 // tiling for shared memory (if necessary)
 constexpr int TILE_X = BLOCK_SIZE_X + 2;
 constexpr int TILE_Y = BLOCK_SIZE_Y + 2;
 constexpr int TILE_Z = BLOCK_SIZE_Z + 2;
 
+constexpr size_t DYNAMIC_SHARED_SIZE = 0;
+
 // domain size
-constexpr int MESH = 200;
-constexpr int DIAM = 20; 
+constexpr int MESH = 128;
+constexpr int DIAM = 19;
 constexpr int NX   = MESH;
 constexpr int NY   = MESH;
 constexpr int NZ   = MESH*2;
@@ -53,7 +59,7 @@ constexpr float VISC     = (U_JET * DIAM) / REYNOLDS;      // kinematic viscosit
 constexpr float TAU      = 0.5f + 3.0f * VISC;             // relaxation time
 constexpr float CSSQ     = 1.0f / 3.0f;                    // square of speed of sound
 constexpr float OMEGA    = 1.0f / TAU;                     // relaxation frequency
-constexpr float GAMMA    = 0.15f * 7.0f;                   // sharpening of the interface
+constexpr float GAMMA    = 0.15f * 3.0f;                   // sharpening of the interface
 constexpr float SIGMA    = (U_JET * U_JET * DIAM) / WEBER; // surface tension coefficient
 
 // auxiliary constants
@@ -63,18 +69,18 @@ constexpr float COEFF_FORCE = 0.5f;         // fixed approximation of (1-omega/2
 
 // first distribution related
 #ifdef D3Q19 //                 0  1  2  3  4  5  6  7  8  9  10 11 12 13 14 15 16 17 18 
-    constexpr int H_CIX[19] = { 0, 1,-1, 0, 0, 0, 0, 1,-1, 1,-1, 0, 0, 1,-1, 1,-1, 0, 0 };
-    constexpr int H_CIY[19] = { 0, 0, 0, 1,-1, 0, 0, 1,-1, 0, 0, 1,-1,-1, 1, 0, 0, 1,-1 };
-    constexpr int H_CIZ[19] = { 0, 0, 0, 0, 0, 1,-1, 0, 0, 1,-1, 1,-1, 0, 0,-1, 1,-1, 1 };
+    constexpr ci_t H_CIX[19] = { 0, 1,-1, 0, 0, 0, 0, 1,-1, 1,-1, 0, 0, 1,-1, 1,-1, 0, 0 };
+    constexpr ci_t H_CIY[19] = { 0, 0, 0, 1,-1, 0, 0, 1,-1, 0, 0, 1,-1,-1, 1, 0, 0, 1,-1 };
+    constexpr ci_t H_CIZ[19] = { 0, 0, 0, 0, 0, 1,-1, 0, 0, 1,-1, 1,-1, 0, 0,-1, 1,-1, 1 };
     constexpr float H_W[19] = { 1.0f / 3.0f, 
                                 1.0f / 18.0f, 1.0f / 18.0f, 1.0f / 18.0f, 1.0f / 18.0f, 1.0f / 18.0f, 1.0f / 18.0f,
                                 1.0f / 36.0f, 1.0f / 36.0f, 1.0f / 36.0f, 1.0f / 36.0f, 1.0f / 36.0f, 1.0f / 36.0f, 
                                 1.0f / 36.0f, 1.0f / 36.0f, 1.0f / 36.0f, 1.0f / 36.0f, 1.0f / 36.0f, 1.0f / 36.0f };
     constexpr int FLINKS = 19;
 #elif defined(D3Q27) //         0  1  2  3  4  5  6  7  8  9  10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26
-    constexpr int H_CIX[27] = { 0, 1,-1, 0, 0, 0, 0, 1,-1, 1,-1, 0, 0, 1,-1, 1,-1, 0, 0, 1,-1, 1,-1, 1,-1,-1, 1 };
-    constexpr int H_CIY[27] = { 0, 0, 0, 1,-1, 0, 0, 1,-1, 0, 0, 1,-1,-1, 1, 0, 0, 1,-1, 1,-1, 1,-1,-1, 1, 1,-1 };
-    constexpr int H_CIZ[27] = { 0, 0, 0, 0, 0, 1,-1, 0, 0, 1,-1, 1,-1, 0, 0,-1, 1,-1, 1, 1,-1,-1, 1, 1,-1, 1,-1 };
+    constexpr ci_t H_CIX[27] = { 0, 1,-1, 0, 0, 0, 0, 1,-1, 1,-1, 0, 0, 1,-1, 1,-1, 0, 0, 1,-1, 1,-1, 1,-1,-1, 1 };
+    constexpr ci_t H_CIY[27] = { 0, 0, 0, 1,-1, 0, 0, 1,-1, 0, 0, 1,-1,-1, 1, 0, 0, 1,-1, 1,-1, 1,-1,-1, 1, 1,-1 };
+    constexpr ci_t H_CIZ[27] = { 0, 0, 0, 0, 0, 1,-1, 0, 0, 1,-1, 1,-1, 0, 0,-1, 1,-1, 1, 1,-1,-1, 1, 1,-1, 1,-1 };
     constexpr float H_W[27] = { 8.0f / 27.0f,
                                 2.0f / 27.0f, 2.0f / 27.0f, 2.0f / 27.0f, 2.0f / 27.0f, 2.0f / 27.0f, 2.0f / 27.0f, 
                                 1.0f / 54.0f, 1.0f / 54.0f, 1.0f / 54.0f, 1.0f / 54.0f, 1.0f / 54.0f, 1.0f / 54.0f, 
@@ -117,10 +123,13 @@ constexpr float COEFF_FORCE = 0.5f;         // fixed approximation of (1-omega/2
 #endif
 
 #ifdef RUN_MODE
-    constexpr int MACRO_SAVE = 100, NSTEPS = 30000;
+    constexpr int MACRO_SAVE = 100;
+    constexpr int NSTEPS = 30000;
 #elif defined(SAMPLE_MODE)
-    constexpr int MACRO_SAVE = 100, NSTEPS = 1000;
+    constexpr int MACRO_SAVE = 100;
+    constexpr int NSTEPS = 1000;
 #elif defined(DEBUG_MODE)
-    constexpr int MACRO_SAVE = 1, NSTEPS = 0;
+    constexpr int MACRO_SAVE = 1;
+    constexpr int NSTEPS = 0;
 #endif
 

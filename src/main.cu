@@ -36,27 +36,27 @@ int main(int argc, char* argv[]) {
 
         // =================================== INFLOW =================================== //
 
-            gpuApplyInflow<<<numBlocksInOut,threadsPerBlockInOut>>> (lbm,STEP); 
+            gpuApplyInflow<<<numBlocksInOut,threadsPerBlockInOut,DYNAMIC_SHARED_SIZE,mainStream>>> (lbm,STEP); 
             getLastCudaError("gpuApplyInflow");
 
         // =============================================================================  //
         
         // ========================= COLLISION & STREAMING ========================= //
             
-            gpuEvolvePhaseField<<<numBlocks,threadsPerBlock,0,mainStream>>> (lbm); 
+            gpuEvolvePhaseField<<<numBlocks,threadsPerBlock,DYNAMIC_SHARED_SIZE,mainStream>>> (lbm); 
             getLastCudaError("gpuEvolvePhaseField");
-            gpuMomCollisionStream<<<numBlocks,threadsPerBlock,0,mainStream>>> (lbm); 
+            gpuMomCollisionStream<<<numBlocks,threadsPerBlock,DYNAMIC_SHARED_SIZE,mainStream>>> (lbm); 
             getLastCudaError("gpuMomCollisionStream");
 
         // ========================================================================= //    
 
         // =================================== BOUNDARIES =================================== //
 
-            gpuReconstructBoundaries<<<numBlocks,threadsPerBlock,0,mainStream>>> (lbm); 
+            gpuReconstructBoundaries<<<numBlocks,threadsPerBlock,DYNAMIC_SHARED_SIZE,mainStream>>> (lbm); 
             getLastCudaError("gpuReconstructBoundaries");
-            gpuApplyPeriodicXY<<<numBlocks,threadsPerBlock,0,mainStream>>> (lbm);
+            gpuApplyPeriodicXY<<<numBlocks,threadsPerBlock,DYNAMIC_SHARED_SIZE,mainStream>>> (lbm);
             getLastCudaError("gpuApplyPeriodicXY");
-            gpuApplyOutflow<<<numBlocksInOut,threadsPerBlockInOut,0,mainStream>>> (lbm);
+            gpuApplyOutflow<<<numBlocksInOut,threadsPerBlockInOut,DYNAMIC_SHARED_SIZE,mainStream>>> (lbm);
             getLastCudaError("gpuApplyOutflow");
 
         // ================================================================================== //
@@ -65,7 +65,7 @@ int main(int argc, char* argv[]) {
 
         if (STEP % MACRO_SAVE == 0) {
 
-            copyAndSaveToBinary(lbm.phi, NX * NY * NZ, SIM_DIR, SIM_ID, STEP, "phi");
+            copyAndSaveToBinary(lbm.phi,NX*NY*NZ,SIM_DIR,SIM_ID,STEP,"phi");
 
             std::cout << "Passo " << STEP << ": Dados salvos em " << SIM_DIR << std::endl;
         }

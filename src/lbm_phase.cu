@@ -10,7 +10,7 @@ __global__ void gpuEvolvePhaseField(LBMFields d) {
         y == 0 || y == NY-1 || 
         z == 0 || z == NZ-1) return;
 
-    const int idx3 = gpu_idx_global3(x,y,z);
+    const idx_t idx3 = gpu_idx_global3(x,y,z);
 
     float pop[GLINKS];
     pop[0] = d.g[gpu_idx_global4(x,y,z,0)];
@@ -60,7 +60,7 @@ __global__ void gpuEvolvePhaseField(LBMFields d) {
         const int zz = z + CIZ[Q];
         float geq = gpu_compute_truncated_equilibria(phi_val,ux_val,uy_val,uz_val,Q) - W_G[Q];
         float anti_diff = W_G[Q] * phi_norm * (CIX[Q] * normx_val + CIY[Q] * normy_val + CIZ[Q] * normz_val);
-        const int streamed_idx4 = gpu_idx_global4(xx,yy,zz,Q);
+        const idx_t streamed_idx4 = gpu_idx_global4(xx,yy,zz,Q);
         d.g[streamed_idx4] = geq + anti_diff;
     }
     

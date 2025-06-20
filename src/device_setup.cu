@@ -1,30 +1,9 @@
 #include "kernels.cuh"
 
-__global__ void gpuInitFieldsAndDistributions(LBMFields d) {
-    const int x = threadIdx.x + blockIdx.x * blockDim.x;
-    const int y = threadIdx.y + blockIdx.y * blockDim.y;
-    const int z = threadIdx.z + blockIdx.z * blockDim.z;
-
-    if (x >= NX || y >= NY || z >= NZ) return;
-    const int idx3 = gpu_idx_global3(x,y,z);
-
-    d.rho[idx3] = 1.0f;
-    #pragma unroll FLINKS
-    for (int Q = 0; Q < FLINKS; ++Q) {
-        const int idx4 = gpu_idx_global4(x,y,z,Q);
-        d.f[idx4] = to_dtype(W[Q] * d.rho[idx3] - W[Q]);
-    }
-    #pragma unroll GLINKS
-    for (int Q = 0; Q < GLINKS; ++Q) {
-        const int idx4 = gpu_idx_global4(x,y,z,Q);
-        d.g[idx4] = W_G[Q] * d.phi[idx3] - W_G[Q];
-    }
-} 
-
 __constant__ float W[FLINKS];
 __constant__ float W_G[GLINKS];
 
-__constant__ int CIX[FLINKS], CIY[FLINKS], CIZ[FLINKS];
+__constant__ ci_t CIX[FLINKS], CIY[FLINKS], CIZ[FLINKS];
 
 #ifdef PERTURBATION
     __constant__ float DATAZ[200];
@@ -36,7 +15,7 @@ LBMFields lbm;
 
 void initDeviceVars() {
     size_t SIZE =        NX * NY * NZ          * sizeof(float);            
-    size_t F_DIST_SIZE = NX * NY * NZ * FLINKS * sizeof(dtype); 
+    size_t F_DIST_SIZE = NX * NY * NZ * FLINKS * sizeof(dtype_t); 
     size_t G_DIST_SIZE = NX * NY * NZ * GLINKS * sizeof(float); 
 
     checkCudaErrors(cudaMalloc(&lbm.phi,   SIZE));
@@ -64,9 +43,9 @@ void initDeviceVars() {
     checkCudaErrors(cudaMemcpyToSymbol(W,   &H_W,   FLINKS * sizeof(float)));
     checkCudaErrors(cudaMemcpyToSymbol(W_G, &H_W_G, GLINKS * sizeof(float)));
 
-    checkCudaErrors(cudaMemcpyToSymbol(CIX,   &H_CIX,   FLINKS * sizeof(int)));
-    checkCudaErrors(cudaMemcpyToSymbol(CIY,   &H_CIY,   FLINKS * sizeof(int)));
-    checkCudaErrors(cudaMemcpyToSymbol(CIZ,   &H_CIZ,   FLINKS * sizeof(int)));
+    checkCudaErrors(cudaMemcpyToSymbol(CIX,   &H_CIX,   FLINKS * sizeof(ci_t)));
+    checkCudaErrors(cudaMemcpyToSymbol(CIY,   &H_CIY,   FLINKS * sizeof(ci_t)));
+    checkCudaErrors(cudaMemcpyToSymbol(CIZ,   &H_CIZ,   FLINKS * sizeof(ci_t)));
 
     #ifdef PERTURBATION
         checkCudaErrors(cudaMemcpyToSymbol(DATAZ, &H_DATAZ, 200 * sizeof(float)));

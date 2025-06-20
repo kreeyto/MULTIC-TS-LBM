@@ -1,19 +1,18 @@
 #pragma once
 #include "common.cuh"
 
-//#define SECOND_ORDER
-#define THIRD_ORDER   
+#define SECOND_ORDER 
 
-__device__ __forceinline__ int gpu_idx_global3(const int x, const int y, const int z) {
+__device__ __forceinline__ idx_t gpu_idx_global3(const int x, const int y, const int z) {
     return x + y * NX + z * NX * NY;
 }
 
-__device__ __forceinline__ int gpu_idx_global4(const int x, const int y, const int z, const int Q) {
+__device__ __forceinline__ idx_t gpu_idx_global4(const int x, const int y, const int z, const int Q) {
     int stride = NX * NY;
     return x + y * NX + z * stride + Q * stride * NZ;
 }
 
-__device__ __forceinline__ int gpu_idx_shared3(const int tx, const int ty, const int tz) {
+__device__ __forceinline__ idx_t gpu_idx_shared3(const int tx, const int ty, const int tz) {
     return tx + ty * TILE_X + tz * TILE_X * TILE_Y;
 }
 

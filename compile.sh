@@ -35,11 +35,12 @@ nvcc -O3 --restrict \
      -rdc=true --ptxas-options=-v \
      -I"${SRC_DIR}" \
      "${SRC_DIR}/main.cu" \
-     "${SRC_DIR}/phase.cu" \
-     "${SRC_DIR}/lbm.cu" \
+     "${SRC_DIR}/lbm_init.cu" \
+     "${SRC_DIR}/lbm_phase.cu" \
+     "${SRC_DIR}/lbm_core.cu" \
      "${SRC_DIR}/lbm_bcs.cu" \
      "${SRC_DIR}/device_setup.cu" \
-     -lcudadevrt -lcurand -maxrregcount=${MAXRREG} -D${VELOCITY_SET} \
+     -maxrregcount=${MAXRREG} -D${VELOCITY_SET} \
      -o "${EXECUTABLE}"
 
 if [ $? -eq 0 ]; then

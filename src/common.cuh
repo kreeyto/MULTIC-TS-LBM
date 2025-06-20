@@ -1,7 +1,6 @@
 #pragma once
 
 #include <cuda_runtime.h>
-#include <curand.h>
 #include <iostream>
 #include <vector>
 #include <fstream>

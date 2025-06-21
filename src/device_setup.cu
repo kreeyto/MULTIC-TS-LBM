@@ -10,6 +10,7 @@ __constant__ ci_t CIX[FLINKS], CIY[FLINKS], CIZ[FLINKS];
 #endif
 
 LBMFields lbm;
+DerivedFields dfields;
                                          
 // =============================================================================================================================================================== //
 
@@ -31,6 +32,9 @@ void initDeviceVars() {
     checkCudaErrors(cudaMalloc(&lbm.ffz,   SIZE));
     checkCudaErrors(cudaMalloc(&lbm.f,     F_DIST_SIZE));
     checkCudaErrors(cudaMalloc(&lbm.g,     G_DIST_SIZE));
+
+    checkCudaErrors(cudaMalloc(&dfields.vorticity_mag, SIZE));
+    checkCudaErrors(cudaMalloc(&dfields.q_criterion,   SIZE));
 
     checkCudaErrors(cudaMemset(lbm.phi,   0, SIZE));
     checkCudaErrors(cudaMemset(lbm.ux,    0, SIZE));

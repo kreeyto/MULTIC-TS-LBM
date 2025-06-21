@@ -18,6 +18,12 @@ struct LBMFields {
     dtype_t *f; float *g; 
 };
 
+struct DerivedFields {
+    float *vorticity_mag;
+    float *q_criterion;
+};
+
 extern LBMFields lbm;
+extern DerivedFields dfields;
 
 void initDeviceVars();

@@ -102,10 +102,3 @@ __host__ __forceinline__ void copyAndSaveToBinary(
     file.close();
 }
 
-__host__ __forceinline__ void cleanupDeviceMemory(LBMFields& f) {
-    cudaFree(f.f); cudaFree(f.g);
-    cudaFree(f.phi); cudaFree(f.rho);
-    cudaFree(f.normx); cudaFree(f.normy); cudaFree(f.normz);
-    cudaFree(f.ux); cudaFree(f.uy); cudaFree(f.uz);
-    cudaFree(f.ffx); cudaFree(f.ffy); cudaFree(f.ffz);
-}

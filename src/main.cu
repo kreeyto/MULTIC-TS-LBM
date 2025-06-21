@@ -61,11 +61,21 @@ int main(int argc, char* argv[]) {
 
         // ================================================================================== //
 
+        // =================================== DERIVED FIELDS =================================== //
+
+            gpuDerivedFields<<<numBlocks,threadsPerBlock,DYNAMIC_SHARED_SIZE,mainStream>>> (lbm,dfields); 
+            getLastCudaError("gpuDerivedFields");
+
+        // ====================================================================================== //
+
         checkCudaErrors(cudaDeviceSynchronize());
 
         if (STEP % MACRO_SAVE == 0) {
 
-            copyAndSaveToBinary(lbm.phi,NX*NY*NZ,SIM_DIR,SIM_ID,STEP,"phi");
+            //copyAndSaveToBinary(lbm.phi,NX*NY*NZ,SIM_DIR,SIM_ID,STEP,"phi");
+            copyAndSaveToBinary(lbm.uz,NX*NY*NZ,SIM_DIR,SIM_ID,STEP,"uz");
+            copyAndSaveToBinary(dfields.vorticity_mag,NX*NY*NZ,SIM_DIR,SIM_ID,STEP,"vorticity_mag");
+            //copyAndSaveToBinary(dfields.q_criterion,NX*NY*NZ,SIM_DIR,SIM_ID,STEP,"q_criterion");
 
             std::cout << "Passo " << STEP << ": Dados salvos em " << SIM_DIR << std::endl;
         }
@@ -73,7 +83,25 @@ int main(int argc, char* argv[]) {
     auto END_TIME = std::chrono::high_resolution_clock::now();
 
     checkCudaErrors(cudaStreamDestroy(mainStream));
-    cleanupDeviceMemory(lbm);
+
+    // lbmfields
+    cudaFree(lbm.f); 
+    cudaFree(lbm.g);
+    cudaFree(lbm.phi); 
+    cudaFree(lbm.rho);
+    cudaFree(lbm.normx);
+    cudaFree(lbm.normy); 
+    cudaFree(lbm.normz);
+    cudaFree(lbm.ux); 
+    cudaFree(lbm.uy); 
+    cudaFree(lbm.uz);
+    cudaFree(lbm.ffx); 
+    cudaFree(lbm.ffy); 
+    cudaFree(lbm.ffz);
+
+    // derivedfields
+    cudaFree(dfields.vorticity_mag);
+    cudaFree(dfields.q_criterion);
 
     std::chrono::duration<double> ELAPSED_TIME = END_TIME - START_TIME;
     long long TOTAL_CELLS = static_cast<long long>(NX) * NY * NZ * NSTEPS;

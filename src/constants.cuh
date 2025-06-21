@@ -15,7 +15,7 @@
 #endif // FP16_COMPRESSION
 
 typedef int ci_t;
-typedef int idx_t;
+typedef unsigned int idx_t;
 
 // ====================================================================================================================  //
 
@@ -23,8 +23,8 @@ typedef int idx_t;
 // scalar field related velocity set is set here
 #define G_D3Q7
 
-//#define RUN_MODE
-#define SAMPLE_MODE
+#define RUN_MODE
+//#define SAMPLE_MODE
 //#define DEBUG_MODE
 
 #define PERTURBATION
@@ -33,16 +33,17 @@ constexpr int BLOCK_SIZE_X = 8;
 constexpr int BLOCK_SIZE_Y = 8;
 constexpr int BLOCK_SIZE_Z = 8;
 
-// tiling for shared memory (if necessary)
+// tiling for shared memory halos
 constexpr int TILE_X = BLOCK_SIZE_X + 2;
 constexpr int TILE_Y = BLOCK_SIZE_Y + 2;
 constexpr int TILE_Z = BLOCK_SIZE_Z + 2;
 
+// dynamic shared memory size 
 constexpr size_t DYNAMIC_SHARED_SIZE = 0;
 
 // domain size
-constexpr int MESH = 128;
-constexpr int DIAM = 19;
+constexpr int MESH = 200;
+constexpr int DIAM = 40;
 constexpr int NX   = MESH;
 constexpr int NY   = MESH;
 constexpr int NZ   = MESH*2;
@@ -59,13 +60,13 @@ constexpr float VISC     = (U_JET * DIAM) / REYNOLDS;      // kinematic viscosit
 constexpr float TAU      = 0.5f + 3.0f * VISC;             // relaxation time
 constexpr float CSSQ     = 1.0f / 3.0f;                    // square of speed of sound
 constexpr float OMEGA    = 1.0f / TAU;                     // relaxation frequency
-constexpr float GAMMA    = 0.15f * 3.0f;                   // sharpening of the interface
+constexpr float GAMMA    = 0.15f * 7.0f;                   // sharpening of the interface
 constexpr float SIGMA    = (U_JET * U_JET * DIAM) / WEBER; // surface tension coefficient
 
 // auxiliary constants
-constexpr float OOS         = 1.0f / 6.0f;  // one over six
-constexpr float OMC         = 1.0f - OMEGA; // complementary of omega
-constexpr float COEFF_FORCE = 0.5f;         // fixed approximation of (1-omega/2), valid in high re limitations
+constexpr float OOS         = 1.0f / 6.0f;           // one over six
+constexpr float OMC         = 1.0f - OMEGA;          // complementary of omega
+constexpr float COEFF_FORCE = (1.0f - OMEGA / 2.0f); // fixed approximation of (1-omega/2), valid in high re limitations
 
 // first distribution related
 #ifdef D3Q19 //                 0  1  2  3  4  5  6  7  8  9  10 11 12 13 14 15 16 17 18 

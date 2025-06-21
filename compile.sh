@@ -39,6 +39,7 @@ nvcc -O3 --restrict \
      "${SRC_DIR}/lbm_phase.cu" \
      "${SRC_DIR}/lbm_core.cu" \
      "${SRC_DIR}/lbm_bcs.cu" \
+     "${SRC_DIR}/lbm_dfields.cu" \
      "${SRC_DIR}/device_setup.cu" \
      -maxrregcount=${MAXRREG} -D${VELOCITY_SET} \
      -o "${EXECUTABLE}"

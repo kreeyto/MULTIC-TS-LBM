@@ -24,3 +24,8 @@ __global__ void gpuEvolvePhaseField(LBMFields d); // AD-based
 // FLUID FIELD EVOLUTION
 // =======================================================================================
 __global__ void gpuMomCollisionStream(LBMFields d); // fused BGK + streaming
+
+// =======================================================================================
+// DERIVED FIELDS
+// =======================================================================================
+__global__ void gpuDerivedFields(LBMFields lbm, DerivedFields dfields); // vorticity, Q-criterion, etc.

@@ -1,5 +1,5 @@
 #pragma once
-#include "common.cuh"
+#include "constants.cuh"
 
 extern __constant__ float W[FLINKS];
 extern __constant__ float W_G[GLINKS];

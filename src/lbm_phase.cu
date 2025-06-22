@@ -58,7 +58,7 @@ __global__ void gpuEvolvePhaseField(LBMFields d) {
         const int xx = x + CIX[Q];
         const int yy = y + CIY[Q];
         const int zz = z + CIZ[Q];
-        float geq = gpu_compute_truncated_equilibria(phi_val,ux_val,uy_val,uz_val,Q) - W_G[Q];
+        float geq = gpu_compute_truncated_equilibria(phi_val,ux_val,uy_val,uz_val,Q);
         float anti_diff = W_G[Q] * phi_norm * (CIX[Q] * normx_val + CIY[Q] * normy_val + CIZ[Q] * normz_val);
         const idx_t streamed_idx4 = gpu_idx_global4(xx,yy,zz,Q);
         d.g[streamed_idx4] = geq + anti_diff;

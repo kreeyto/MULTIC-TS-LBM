@@ -1,6 +1,6 @@
 #include "kernels.cuh"
 
-#define INFLOW_CASE_ONE
+#define INFLOW_CASE_THREE
 
 __global__ void gpuApplyInflow(LBMFields d, const int STEP) {
     const int x = threadIdx.x + blockIdx.x * blockDim.x;
@@ -60,7 +60,7 @@ __global__ void gpuApplyInflow(LBMFields d, const int STEP) {
         const int xx = x + CIX[Q];
         const int yy = y + CIY[Q];
         const int zz = z + CIZ[Q];
-        float feq = gpu_compute_equilibria(rho_val,0.0f,0.0f,uz_in,uu,Q) - W[Q];
+        float feq = gpu_compute_equilibria(rho_val,0.0f,0.0f,uz_in,uu,Q);
         const idx_t streamed_idx4 = gpu_idx_global4(xx,yy,zz,Q);
         d.f[streamed_idx4] = to_dtype(feq);
     }
@@ -69,13 +69,11 @@ __global__ void gpuApplyInflow(LBMFields d, const int STEP) {
         const int xx = x + CIX[Q];
         const int yy = y + CIY[Q];
         const int zz = z + CIZ[Q];
-        float geq = gpu_compute_truncated_equilibria(phi_in,0.0f,0.0f,uz_in,Q) - W_G[Q];
+        float geq = gpu_compute_truncated_equilibria(phi_in,0.0f,0.0f,uz_in,Q);
         const idx_t streamed_idx4 = gpu_idx_global4(xx,yy,zz,Q);
         d.g[streamed_idx4] = geq;
     }
 }
-
-// ============================================================================================================== //
 
 __global__ void gpuReconstructBoundaries(LBMFields d) {
     const int x = threadIdx.x + blockIdx.x * blockDim.x;
@@ -83,9 +81,9 @@ __global__ void gpuReconstructBoundaries(LBMFields d) {
     const int z = threadIdx.z + blockIdx.z * blockDim.z;
 
     bool is_valid_edge = (x < NX && y < NY && z < NZ) &&
-                       (x == 0 || x == NX-1 || 
-                        y == 0 || y == NY-1 || 
-                        z == NZ-1); 
+                            (x == 0 || x == NX-1 ||
+                            y == 0 || y == NY-1 || 
+                            z == NZ-1); 
     if (!is_valid_edge) return;
     const idx_t idx3 = gpu_idx_global3(x,y,z);
 
@@ -111,6 +109,8 @@ __global__ void gpuReconstructBoundaries(LBMFields d) {
     }
 }
 
+// ============================================================================================================== //
+
 __global__ void gpuApplyPeriodicXY(LBMFields d) {
     const int x = threadIdx.x + blockIdx.x * blockDim.x;
     const int y = threadIdx.y + blockIdx.y * blockDim.y;
@@ -124,15 +124,22 @@ __global__ void gpuApplyPeriodicXY(LBMFields d) {
         const int src_x = (x == 0) ? NX - 2 : 1;
         const idx_t idx_src = gpu_idx_global3(src_x,y,z);
         d.phi[idx] = d.phi[idx_src];
+        d.rho[idx] = d.rho[idx_src];
+        d.ux[idx] = d.ux[idx_src];
+        d.uy[idx] = d.uy[idx_src];
+        d.uz[idx] = d.uz[idx_src];
     }
 
     if (y == 0 || y == NY-1) {
         const int src_y = (y == 0) ? NY - 2 : 1;
         const idx_t idx_src = gpu_idx_global3(x,src_y,z);
         d.phi[idx] = d.phi[idx_src];
+        d.rho[idx] = d.rho[idx_src];
+        d.ux[idx] = d.ux[idx_src];
+        d.uy[idx] = d.uy[idx_src];
+        d.uz[idx] = d.uz[idx_src];
     }
 }
-
 
 __global__ void gpuApplyOutflow(LBMFields d) {
     const int x = threadIdx.x + blockIdx.x * blockDim.x;
@@ -142,8 +149,9 @@ __global__ void gpuApplyOutflow(LBMFields d) {
     if (x >= NX || y >= NY) return;
 
     d.phi[gpu_idx_global3(x,y,z)] = d.phi[gpu_idx_global3(x,y,z-1)];
+    d.rho[gpu_idx_global3(x,y,z)] = d.rho[gpu_idx_global3(x,y,z-1)];
+    d.ux[gpu_idx_global3(x,y,z)] = d.ux[gpu_idx_global3(x,y,z-1)];
+    d.uy[gpu_idx_global3(x,y,z)] = d.uy[gpu_idx_global3(x,y,z-1)];
+    d.uz[gpu_idx_global3(x,y,z)] = d.uz[gpu_idx_global3(x,y,z-1)];
 }
-
-
-
 

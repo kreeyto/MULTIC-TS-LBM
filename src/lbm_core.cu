@@ -82,7 +82,7 @@ __global__ void gpuMomCollisionStream(LBMFields d) {
         float force_corr = COEFF_FORCE * pre_feq * ( (CIX[Q] - ux_val) * ffx_val +
                                                      (CIY[Q] - uy_val) * ffy_val +
                                                      (CIZ[Q] - uz_val) * ffz_val ) * inv_rho_cssq;
-        float feq = pre_feq - force_corr - W[Q];
+        float feq = pre_feq - force_corr;
         fneq[Q] = pop[Q] - feq;
     }
 
@@ -106,7 +106,7 @@ __global__ void gpuMomCollisionStream(LBMFields d) {
         const int xx = x + CIX[Q];
         const int yy = y + CIY[Q];
         const int zz = z + CIZ[Q];
-        float feq = gpu_compute_equilibria(rho_val,ux_val,uy_val,uz_val,uu,Q) - W[Q];
+        float feq = gpu_compute_equilibria(rho_val,ux_val,uy_val,uz_val,uu,Q);
         float force_corr = COEFF_FORCE * feq * ( (CIX[Q] - ux_val) * ffx_val +
                                                  (CIY[Q] - uy_val) * ffy_val +
                                                  (CIZ[Q] - uz_val) * ffz_val ) * inv_rho_cssq;

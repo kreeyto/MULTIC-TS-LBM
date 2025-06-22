@@ -20,10 +20,10 @@ int main(int argc, char* argv[]) {
                    (NY + threadsPerBlock.y - 1) / threadsPerBlock.y,
                    (NZ + threadsPerBlock.z - 1) / threadsPerBlock.z);
 
-    dim3 threadsPerBlockInOut(BLOCK_SIZE_X*2,BLOCK_SIZE_Y*2);  
-    dim3 numBlocksInOut((NX + threadsPerBlockInOut.x - 1) / threadsPerBlockInOut.x,
-                        (NY + threadsPerBlockInOut.y - 1) / threadsPerBlockInOut.y);
-                         
+    dim3 threadsPerBlockZ(BLOCK_SIZE_X*2,BLOCK_SIZE_Y*2);  
+    dim3 numBlocksZ((NX + threadsPerBlockZ.x - 1) / threadsPerBlockZ.x,
+                    (NY + threadsPerBlockZ.y - 1) / threadsPerBlockZ.y);
+                    
     cudaStream_t mainStream;
     checkCudaErrors(cudaStreamCreate(&mainStream));
 
@@ -36,7 +36,7 @@ int main(int argc, char* argv[]) {
 
         // =================================== INFLOW =================================== //
 
-            gpuApplyInflow<<<numBlocksInOut,threadsPerBlockInOut,DYNAMIC_SHARED_SIZE,mainStream>>> (lbm,STEP); 
+            gpuApplyInflow<<<numBlocksZ,threadsPerBlockZ,DYNAMIC_SHARED_SIZE,mainStream>>> (lbm,STEP); 
             getLastCudaError("gpuApplyInflow");
 
         // =============================================================================  //
@@ -56,15 +56,15 @@ int main(int argc, char* argv[]) {
             getLastCudaError("gpuReconstructBoundaries");
             gpuApplyPeriodicXY<<<numBlocks,threadsPerBlock,DYNAMIC_SHARED_SIZE,mainStream>>> (lbm);
             getLastCudaError("gpuApplyPeriodicXY");
-            gpuApplyOutflow<<<numBlocksInOut,threadsPerBlockInOut,DYNAMIC_SHARED_SIZE,mainStream>>> (lbm);
+            gpuApplyOutflow<<<numBlocksZ,threadsPerBlockZ,DYNAMIC_SHARED_SIZE,mainStream>>> (lbm);
             getLastCudaError("gpuApplyOutflow");
 
         // ================================================================================== //
 
         // =================================== DERIVED FIELDS =================================== //
 
-            gpuDerivedFields<<<numBlocks,threadsPerBlock,DYNAMIC_SHARED_SIZE,mainStream>>> (lbm,dfields); 
-            getLastCudaError("gpuDerivedFields");
+            //gpuDerivedFields<<<numBlocks,threadsPerBlock,DYNAMIC_SHARED_SIZE,mainStream>>> (lbm,dfields); 
+            //getLastCudaError("gpuDerivedFields");
 
         // ====================================================================================== //
 
@@ -72,9 +72,11 @@ int main(int argc, char* argv[]) {
 
         if (STEP % MACRO_SAVE == 0) {
 
-            //copyAndSaveToBinary(lbm.phi,NX*NY*NZ,SIM_DIR,SIM_ID,STEP,"phi");
+            copyAndSaveToBinary(lbm.phi,NX*NY*NZ,SIM_DIR,SIM_ID,STEP,"phi");
+            copyAndSaveToBinary(lbm.rho,NX*NY*NZ,SIM_DIR,SIM_ID,STEP,"rho");
+            copyAndSaveToBinary(lbm.uy,NX*NY*NZ,SIM_DIR,SIM_ID,STEP,"uy");
             copyAndSaveToBinary(lbm.uz,NX*NY*NZ,SIM_DIR,SIM_ID,STEP,"uz");
-            copyAndSaveToBinary(dfields.vorticity_mag,NX*NY*NZ,SIM_DIR,SIM_ID,STEP,"vorticity_mag");
+            //copyAndSaveToBinary(dfields.vorticity_mag,NX*NY*NZ,SIM_DIR,SIM_ID,STEP,"vorticity_mag");
             //copyAndSaveToBinary(dfields.q_criterion,NX*NY*NZ,SIM_DIR,SIM_ID,STEP,"q_criterion");
 
             std::cout << "Passo " << STEP << ": Dados salvos em " << SIM_DIR << std::endl;

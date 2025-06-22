@@ -43,12 +43,12 @@ __global__ void gpuDerivedFields(LBMFields lbm, DerivedFields dfields) {
     float Omega_xz = 0.5f * (dudz - dwdx);
     float Omega_yz = 0.5f * (dvdz - dwdy);
 
-    float S_norm2 = Sxx*Sxx + Syy*Syy + Szz*Szz 
-                  + 2.0f*(Sxy*Sxy + Sxz*Sxz + Syz*Syz);
+    float S_norm2 = Sxx*Sxx + Syy*Syy + Szz*Szz + 2.0f*(Sxy*Sxy + Sxz*Sxz + Syz*Syz);
 
     float Omega_norm2 = 2.0f*(Omega_xy*Omega_xy + Omega_xz*Omega_xz + Omega_yz*Omega_yz);
 
     float Q = 0.5f * (Omega_norm2 - S_norm2);
     
     dfields.q_criterion[idx] = Q;
+    // good q values float around 0.000005
 }

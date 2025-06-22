@@ -1,5 +1,5 @@
 #pragma once
-#include "common.cuh"
+#include "constants.cuh"
 
 __host__ __forceinline__ std::string createSimulationDirectory(
     const std::string& VELOCITY_SET, const std::string& SIM_ID

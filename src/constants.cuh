@@ -1,5 +1,20 @@
 #pragma once
 
+#include <cuda_runtime.h>
+#include <iostream>
+#include <vector>
+#include <fstream>
+#include <string>
+#include <sstream>
+#include <iomanip>
+#include <chrono>
+#include <cstdlib>
+#include <stdexcept>
+#include <stdio.h>
+#include <stdlib.h>
+#include <builtin_types.h>
+#include <math.h>
+
 #define FP16_COMPRESSION
 
 // fp16 precision for the hydrodynamic distribution
@@ -15,7 +30,7 @@
 #endif // FP16_COMPRESSION
 
 typedef int ci_t;
-typedef unsigned int idx_t;
+typedef int idx_t;
 
 // ====================================================================================================================  //
 
@@ -42,11 +57,11 @@ constexpr int TILE_Z = BLOCK_SIZE_Z + 2;
 constexpr size_t DYNAMIC_SHARED_SIZE = 0;
 
 // domain size
-constexpr int MESH = 200;
-constexpr int DIAM = 40;
+constexpr int MESH = 256;
+constexpr int DIAM = 38;
 constexpr int NX   = MESH;
 constexpr int NY   = MESH;
-constexpr int NZ   = MESH*2;
+constexpr int NZ   = MESH*4;
 
 // jet velocity
 constexpr float U_JET = 0.05; 
@@ -60,7 +75,7 @@ constexpr float VISC     = (U_JET * DIAM) / REYNOLDS;      // kinematic viscosit
 constexpr float TAU      = 0.5f + 3.0f * VISC;             // relaxation time
 constexpr float CSSQ     = 1.0f / 3.0f;                    // square of speed of sound
 constexpr float OMEGA    = 1.0f / TAU;                     // relaxation frequency
-constexpr float GAMMA    = 0.15f * 7.0f;                   // sharpening of the interface
+constexpr float GAMMA    = 0.15f * 3.0f;                   // sharpening of the interface
 constexpr float SIGMA    = (U_JET * U_JET * DIAM) / WEBER; // surface tension coefficient
 
 // auxiliary constants
@@ -133,4 +148,26 @@ constexpr float COEFF_FORCE = (1.0f - OMEGA / 2.0f); // fixed approximation of (
     constexpr int MACRO_SAVE = 1;
     constexpr int NSTEPS = 0;
 #endif
+
+#define checkCudaErrors(err)  __checkCudaErrors(err,#err,__FILE__,__LINE__)
+#define getLastCudaError(msg)  __getLastCudaError(msg,__FILE__,__LINE__)
+#define checkCurandStatus(status) __checkCurandStatus(status, __FILE__, __LINE__)
+
+inline void __checkCudaErrors(cudaError_t err, const char* const func, const char* const file, const int line) {
+    if (err != cudaSuccess) {
+        fprintf(stderr, "CUDA error at %s(%d)\"%s\": [%d] %s.\n",
+            file, line, func, (int)err, cudaGetErrorString(err)); fflush(stderr);
+        exit(-1);
+    }
+}
+
+inline void __getLastCudaError(const char* const errorMessage, const char* const file, const int line) {
+    cudaError_t err = cudaGetLastError();
+    if (err != cudaSuccess) {
+        fprintf(stderr, "CUDA error at %s(%d): [%d] %s.\n",
+            file, line, (int)err, cudaGetErrorString(err));  fflush(stderr);
+        exit(-1);
+    }
+}
+
 

@@ -61,7 +61,7 @@ constexpr int MESH = 256;
 constexpr int DIAM = 38;
 constexpr int NX   = MESH;
 constexpr int NY   = MESH;
-constexpr int NZ   = MESH*4;
+constexpr int NZ   = MESH*2;
 
 // jet velocity
 constexpr float U_JET = 0.05; 
@@ -75,7 +75,7 @@ constexpr float VISC     = (U_JET * DIAM) / REYNOLDS;      // kinematic viscosit
 constexpr float TAU      = 0.5f + 3.0f * VISC;             // relaxation time
 constexpr float CSSQ     = 1.0f / 3.0f;                    // square of speed of sound
 constexpr float OMEGA    = 1.0f / TAU;                     // relaxation frequency
-constexpr float GAMMA    = 0.15f * 3.0f;                   // sharpening of the interface
+constexpr float GAMMA    = 0.15f * 5.0f;                   // sharpening of the interface
 constexpr float SIGMA    = (U_JET * U_JET * DIAM) / WEBER; // surface tension coefficient
 
 // auxiliary constants

@@ -1,6 +1,6 @@
 # MULTIC-TS-LBM
 
-**MULTIC-TS-LBM** is a **thread-safe**, GPU-accelerated simulator for multicomponent jet flows using the Lattice Boltzmann Method (LBM). Designed with CUDA for high performance, it supports **D3Q19** and **D3Q27** velocity sets for hydrodynamics, and **D3Q7** for phase-field evolution. The solver simulates multiphase flows with sharp interface dynamics, surface tension effects, and configurable perturbations.
+**MULTIC-TS-LBM** is a **thread-safe**, GPU-accelerated simulator for multicomponent jet flows using the Lattice Boltzmann Method (LBM). Designed with CUDA for high performance, it supports **D3Q19** and **D3Q27** velocity sets for hydrodynamics, and **D3Q7** for phase-field evolution. The solver simulates flows with sharp interface dynamics, surface tension effects, and configurable perturbations.
 
 Post-processed results are exported as `.vtr` files for visualization in **ParaView**.
 
@@ -91,20 +91,20 @@ The post-processing workflow is shared with https://github.com/CERNN/MR-LBM. It 
 | ----------------- | ------------------------------------------------------ |
 | `main.cu`         | Entry point: orchestrates full simulation              |
 | `device_setup.cu` | Memory allocation and GPU-side constant setup          |
-| `lbm.cu`          | Main LBM algorithm (collision, streaming, evolution)   |
-| `lbm_int.cu`      | Phase field and surface tension interface calculations |
+| `lbm_core.cu`     | Main LBM algorithm (collision, streaming, evolution)   |
+| `lbm_phase.cu`    | Phase field and surface tension interface calculations |
 | `lbm_bcs.cu`      | Boundary conditions (inflow, periodic, outflow)        |
+| `lbm_dfields.cu`  | Derived fields (vorticity, q-criterion, etc)           |
 
 #### 📂 `.cuh` Files – Headers & Declarations
 
 | File                   | Description                                        |
 | ---------------------- | -------------------------------------------------- |
 | `device_header.cuh`    | Device variables and fields declaration            |
-| `constants.cuh`        | Physical/mesh parameters, D3Q set definitions      |
+| `constants.cuh`        | Physical/mesh parameters, D3Q set definitions,     |
 | `kernels.cuh`          | Kernel declarations                                |
 | `host_functions.cuh`   | Data saving and simulation metadata creation       |
 | `device_functions.cuh` | GPU helpers (indexing, equilibrium calculations)   |
-| `error_def.cuh`        | CUDA error handling wrappers                       |
 | `common.cuh`           | Common includes                                    |
 
 ### 📊 `post/` - Python Post-Processing
@@ -139,7 +139,7 @@ This compiles, runs the simulation, and generates `.vtr` files in `bin/D3Q19/000
 
 This code was developed as part of an undergraduate research fellowship at the Geoenergia Lab (UDESC - Balneário Camboriú Campus), under the project:
 
-**"Numerical Modeling of Oil in the Sea Based on Chemical and Mechanical Subsea Dispersion Experiments (SUBJET)"**, in partnership with **Petrobras**.
+**"Experiment-based physical and numerical modeling of subsea oil jet dispersion (SUBJET)"**, in partnership with **Petrobras, ANP, FITEJ and SINTEF Ocean**.
 
 ## 📬 Contact
 

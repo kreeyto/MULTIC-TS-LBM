@@ -36,8 +36,8 @@ int main(int argc, char* argv[]) {
 
         // =================================== INFLOW =================================== //
 
-            gpuApplyInflow<<<numBlocksZ,threadsPerBlockZ,DYNAMIC_SHARED_SIZE,mainStream>>> (lbm,STEP); 
-            getLastCudaError("gpuApplyInflow");
+            gpuReconstructBoundaries<<<numBlocks,threadsPerBlock,DYNAMIC_SHARED_SIZE,mainStream>>> (lbm); 
+            getLastCudaError("gpuReconstructBoundaries");
 
         // =============================================================================  //
         
@@ -52,8 +52,8 @@ int main(int argc, char* argv[]) {
 
         // =================================== BOUNDARIES =================================== //
 
-            gpuReconstructBoundaries<<<numBlocks,threadsPerBlock,DYNAMIC_SHARED_SIZE,mainStream>>> (lbm); 
-            getLastCudaError("gpuReconstructBoundaries");
+            gpuApplyInflow<<<numBlocksZ,threadsPerBlockZ,DYNAMIC_SHARED_SIZE,mainStream>>> (lbm,STEP); 
+            getLastCudaError("gpuApplyInflow");
             gpuApplyPeriodicXY<<<numBlocks,threadsPerBlock,DYNAMIC_SHARED_SIZE,mainStream>>> (lbm);
             getLastCudaError("gpuApplyPeriodicXY");
             gpuApplyOutflow<<<numBlocksZ,threadsPerBlockZ,DYNAMIC_SHARED_SIZE,mainStream>>> (lbm);
@@ -74,7 +74,7 @@ int main(int argc, char* argv[]) {
 
             copyAndSaveToBinary(lbm.phi,NX*NY*NZ,SIM_DIR,SIM_ID,STEP,"phi");
             copyAndSaveToBinary(lbm.rho,NX*NY*NZ,SIM_DIR,SIM_ID,STEP,"rho");
-            copyAndSaveToBinary(lbm.uy,NX*NY*NZ,SIM_DIR,SIM_ID,STEP,"uy");
+            //copyAndSaveToBinary(lbm.uy,NX*NY*NZ,SIM_DIR,SIM_ID,STEP,"uy");
             copyAndSaveToBinary(lbm.uz,NX*NY*NZ,SIM_DIR,SIM_ID,STEP,"uz");
             //copyAndSaveToBinary(dfields.vorticity_mag,NX*NY*NZ,SIM_DIR,SIM_ID,STEP,"vorticity_mag");
             //copyAndSaveToBinary(dfields.q_criterion,NX*NY*NZ,SIM_DIR,SIM_ID,STEP,"q_criterion");

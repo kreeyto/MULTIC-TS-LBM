@@ -57,8 +57,8 @@ constexpr int TILE_Z = BLOCK_SIZE_Z + 2;
 constexpr size_t DYNAMIC_SHARED_SIZE = 0;
 
 // domain size
-constexpr int MESH = 256;
-constexpr int DIAM = 38;
+constexpr int MESH = 64;
+constexpr int DIAM = 10;
 constexpr int NX   = MESH;
 constexpr int NY   = MESH;
 constexpr int NZ   = MESH*2;
@@ -79,15 +79,16 @@ constexpr float GAMMA    = 0.15f * 5.0f;                   // sharpening of the 
 constexpr float SIGMA    = (U_JET * U_JET * DIAM) / WEBER; // surface tension coefficient
 
 // auxiliary constants
-constexpr float OOS         = 1.0f / 6.0f;           // one over six
-constexpr float OMC         = 1.0f - OMEGA;          // complementary of omega
-constexpr float COEFF_FORCE = (1.0f - OMEGA / 2.0f); // fixed approximation of (1-omega/2), valid in high re limitations
+constexpr float OOS         = 1.0f / 6.0f;  // one over six
+constexpr float OMC         = 1.0f - OMEGA; // complementary of omega
+constexpr float COEFF_FORCE = 0.5f;         // fixed approximation of (1-omega/2), valid in high re limitations
 
 // first distribution related
 #ifdef D3Q19 //                 0  1  2  3  4  5  6  7  8  9  10 11 12 13 14 15 16 17 18 
     constexpr ci_t H_CIX[19] = { 0, 1,-1, 0, 0, 0, 0, 1,-1, 1,-1, 0, 0, 1,-1, 1,-1, 0, 0 };
     constexpr ci_t H_CIY[19] = { 0, 0, 0, 1,-1, 0, 0, 1,-1, 0, 0, 1,-1,-1, 1, 0, 0, 1,-1 };
     constexpr ci_t H_CIZ[19] = { 0, 0, 0, 0, 0, 1,-1, 0, 0, 1,-1, 1,-1, 0, 0,-1, 1,-1, 1 };
+    constexpr ci_t H_OPP[19] = { 0, 2, 1, 4, 3, 6, 5, 8, 7, 10, 9, 12, 11, 14, 13, 16, 15, 18, 17 };
     constexpr float H_W[19] = { 1.0f / 3.0f, 
                                 1.0f / 18.0f, 1.0f / 18.0f, 1.0f / 18.0f, 1.0f / 18.0f, 1.0f / 18.0f, 1.0f / 18.0f,
                                 1.0f / 36.0f, 1.0f / 36.0f, 1.0f / 36.0f, 1.0f / 36.0f, 1.0f / 36.0f, 1.0f / 36.0f, 

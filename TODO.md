@@ -14,7 +14,15 @@ A set of key improvements and extensions planned for this project.
     - Compilation flag `--maxrregcount` to limit register usage;
   - **GPU occupancy is still behind by ~30% of its potential.**
 
-### 🧩 2. Codebase Generalization and Modularity
+### 💧 2. LBM Related
+
+- [ ] **Implement the moment representation** of the LBM:
+  - Requires only 10 three-dimensional arrays in the global memory;
+  - Reconstructs the distribution functions locally, no need to store Q copies;
+  - Provides a drastic reduction in memory bandwith;
+  - Theory: **A graphic processing unit implementation for the moment representation of the lattice Boltzmann method**.
+
+### 🧩 3. Codebase Generalization and Modularity
 
 - [ ] **Merge** this repository (`MULTIC-TS-CUDA`) with the `MULTIC-BUBBLE-CUDA` project:
   - Goal: make the codebase general for **multicomponent LBM flows**, regardless of geometry or injection scenario.
@@ -23,7 +31,7 @@ A set of key improvements and extensions planned for this project.
   - `#define` macros;
   - Encapsulation of case-specific setup (inflow/boundary conditions, initial fields, etc.).
 
-### 🌊 3. Boundary Conditions
+### 🌊 4. Boundary Conditions
 
 - [X] **Implement boundary reconstruction** to enable physical boundary behavior:
   - [x] **Periodic** behavior implemented on lateral faces (`x` and `y` directions);
@@ -31,7 +39,7 @@ A set of key improvements and extensions planned for this project.
   - [x] **Inflow** implemented explicitly at `z = 0`;
   - [ ] **EXTRA**: prevent outflow from recirculating when too much fluid tries to exit.
 
-### 🔬 4. Physics Extensions
+### 🔬 5. Physics Extensions
 
 - [ ] **Associate physical properties** to each fluid component:
   - Assign **oil** properties to the injected jet and **water** to the background medium (already possible).
@@ -40,7 +48,7 @@ A set of key improvements and extensions planned for this project.
   - Parametrize oil characteristics (density, viscosity, surface tension, interface width) for multiple types or API grades;
   - Possibly via external config or compile-time macros.
 
-### 📦 5. Code Usability
+### 📦 6. Code Usability
 
 - [ ] Move post-processing loop to C++ for better performance and integration:
   - Rewrite `process_steps.py` processing loop to C++ due to the large time needed to process big simulations;

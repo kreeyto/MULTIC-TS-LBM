@@ -28,7 +28,7 @@ __host__ __forceinline__ std::string createSimulationDirectory(
 __host__ __forceinline__ void computeAndPrintOccupancy() {
     int minGridSize = 0, blockSize = 0;
     cudaError_t err = cudaOccupancyMaxPotentialBlockSize(
-        &minGridSize, &blockSize, gpuMomCollisionStream, 0, 0);
+        &minGridSize, &blockSize, gpuCollisionStream, 0, 0);
     if (err != cudaSuccess) {
         std::cerr << "Error in calculating occupancy: " << cudaGetErrorString(err) << std::endl;
         exit(EXIT_FAILURE);
@@ -36,7 +36,7 @@ __host__ __forceinline__ void computeAndPrintOccupancy() {
 
     int maxBlocksPerSM = 0;
     cudaOccupancyMaxActiveBlocksPerMultiprocessor(
-        &maxBlocksPerSM, gpuMomCollisionStream, blockSize, 0);
+        &maxBlocksPerSM, gpuCollisionStream, blockSize, 0);
 
     std::cout << "\n// =============================================== //\n";
     std::cout << "     Optimal block size       : " << blockSize << "\n";

@@ -36,8 +36,8 @@ int main(int argc, char* argv[]) {
 
         // =================================== INFLOW =================================== //
 
-            gpuReconstructBoundaries<<<numBlocks,threadsPerBlock,DYNAMIC_SHARED_SIZE,mainStream>>> (lbm); 
-            getLastCudaError("gpuReconstructBoundaries");
+            gpuApplyInflow<<<numBlocksZ,threadsPerBlockZ,DYNAMIC_SHARED_SIZE,mainStream>>> (lbm,STEP); 
+            getLastCudaError("gpuApplyInflow");
 
         // =============================================================================  //
         
@@ -45,15 +45,15 @@ int main(int argc, char* argv[]) {
             
             gpuEvolvePhaseField<<<numBlocks,threadsPerBlock,DYNAMIC_SHARED_SIZE,mainStream>>> (lbm); 
             getLastCudaError("gpuEvolvePhaseField");
-            gpuMomCollisionStream<<<numBlocks,threadsPerBlock,DYNAMIC_SHARED_SIZE,mainStream>>> (lbm); 
-            getLastCudaError("gpuMomCollisionStream");
+            gpuCollisionStream<<<numBlocks,threadsPerBlock,DYNAMIC_SHARED_SIZE,mainStream>>> (lbm); 
+            getLastCudaError("gpuCollisionStream");
 
         // ========================================================================= //    
 
         // =================================== BOUNDARIES =================================== //
 
-            gpuApplyInflow<<<numBlocksZ,threadsPerBlockZ,DYNAMIC_SHARED_SIZE,mainStream>>> (lbm,STEP); 
-            getLastCudaError("gpuApplyInflow");
+            gpuReconstructBoundaries<<<numBlocks,threadsPerBlock,DYNAMIC_SHARED_SIZE,mainStream>>> (lbm); 
+            getLastCudaError("gpuReconstructBoundaries");
             gpuApplyPeriodicXY<<<numBlocks,threadsPerBlock,DYNAMIC_SHARED_SIZE,mainStream>>> (lbm);
             getLastCudaError("gpuApplyPeriodicXY");
             gpuApplyOutflow<<<numBlocksZ,threadsPerBlockZ,DYNAMIC_SHARED_SIZE,mainStream>>> (lbm);
@@ -73,8 +73,6 @@ int main(int argc, char* argv[]) {
         if (STEP % MACRO_SAVE == 0) {
 
             copyAndSaveToBinary(lbm.phi,NX*NY*NZ,SIM_DIR,SIM_ID,STEP,"phi");
-            copyAndSaveToBinary(lbm.rho,NX*NY*NZ,SIM_DIR,SIM_ID,STEP,"rho");
-            //copyAndSaveToBinary(lbm.uy,NX*NY*NZ,SIM_DIR,SIM_ID,STEP,"uy");
             copyAndSaveToBinary(lbm.uz,NX*NY*NZ,SIM_DIR,SIM_ID,STEP,"uz");
             //copyAndSaveToBinary(dfields.vorticity_mag,NX*NY*NZ,SIM_DIR,SIM_ID,STEP,"vorticity_mag");
             //copyAndSaveToBinary(dfields.q_criterion,NX*NY*NZ,SIM_DIR,SIM_ID,STEP,"q_criterion");
@@ -97,6 +95,12 @@ int main(int argc, char* argv[]) {
     cudaFree(lbm.ux); 
     cudaFree(lbm.uy); 
     cudaFree(lbm.uz);
+    cudaFree(lbm.pxx);
+    cudaFree(lbm.pyy);
+    cudaFree(lbm.pzz);
+    cudaFree(lbm.pxy);
+    cudaFree(lbm.pxz);
+    cudaFree(lbm.pyz);
     cudaFree(lbm.ffx); 
     cudaFree(lbm.ffy); 
     cudaFree(lbm.ffz);

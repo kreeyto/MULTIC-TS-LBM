@@ -9,6 +9,12 @@ __global__ void gpuInitFieldsAndDistributions(LBMFields d) {
     const idx_t idx3 = gpu_idx_global3(x,y,z);
 
     d.rho[idx3] = 1.0f;
+    d.pxx[idx3] = 1.0f;
+    d.pyy[idx3] = 1.0f;
+    d.pzz[idx3] = 1.0f;
+    d.pxy[idx3] = 1.0f;
+    d.pxz[idx3] = 1.0f;
+    d.pyz[idx3] = 1.0f;
     #pragma unroll FLINKS
     for (int Q = 0; Q < FLINKS; ++Q) {
         const idx_t idx4 = gpu_idx_global4(x,y,z,Q);

@@ -2,6 +2,9 @@
 
 #define INFLOW_CASE_THREE
 
+//#define SIMPLIFIED_REC_BOUNDARIES
+#define EXTRAPOLATE_BOUNDARIES
+
 __global__ void gpuApplyInflow(LBMFields d, const int STEP) {
     const int x = threadIdx.x + blockIdx.x * blockDim.x;
     const int y = threadIdx.y + blockIdx.y * blockDim.y;
@@ -75,8 +78,7 @@ __global__ void gpuApplyInflow(LBMFields d, const int STEP) {
     }
 }
 
-
-/*
+#ifdef SIMPLIFIED_REC_BOUNDARIES
 
 __global__ void gpuReconstructBoundaries(LBMFields d) {
     const int x = threadIdx.x + blockIdx.x * blockDim.x;
@@ -86,64 +88,7 @@ __global__ void gpuReconstructBoundaries(LBMFields d) {
     bool is_valid_edge = (x < NX && y < NY && z < NZ) &&
                             (x == 0 || x == NX-1 ||
                              y == 0 || y == NY-1 || 
-                                       z == NZ-1); // prevent writes on inflow
-    if (!is_valid_edge) return;
-
-    const idx_t idx3 = gpu_idx_global3(x,y,z);
-    const float rho_val = d.rho[idx3];
-    const float phi_val = d.phi[idx3];
-    const float ux_val = d.ux[idx3];
-    const float uy_val = d.uy[idx3];
-    const float uz_val = d.uz[idx3];
-    float uu = 1.5f * (ux_val*ux_val + uy_val*uy_val + uz_val*uz_val);
-
-    // extrapolate fneq from the inside of the domain
-
-    #pragma unroll FLINKS
-    for (int Q = 0; Q < FLINKS; ++Q) {
-        int xo = x + CIX[OPP[Q]];
-        int yo = y + CIY[OPP[Q]];
-        int zo = z + CIZ[OPP[Q]];
-        const int xx = x + CIX[Q];
-        const int yy = y + CIY[Q];
-        const int zz = z + CIZ[Q];
-        if (xo >= 0 && xo < NX && yo >= 0 && yo < NY && zo >= 0 && zo < NZ) {
-            idx_t idx4_in = gpu_idx_global4(xo, yo, zo, Q);
-            idx_t idx4_out = gpu_idx_global4(xx, yy, zz, Q);
-
-            float rho_in = d.rho[gpu_idx_global3(xo, yo, zo)];
-            float ux_in  = d.ux [gpu_idx_global3(xo, yo, zo)];
-            float uy_in  = d.uy [gpu_idx_global3(xo, yo, zo)];
-            float uz_in  = d.uz [gpu_idx_global3(xo, yo, zo)];
-            float uu_in  = 1.5f * (ux_in*ux_in + uy_in*uy_in + uz_in*uz_in);
-
-            float fi_in = d.f[idx4_in];
-            float feq_in = gpu_compute_equilibria(rho_in, ux_in, uy_in, uz_in, uu_in, Q);
-            float fneq_in = fi_in - feq_in;
-
-            float feq_out = gpu_compute_equilibria(rho_val, ux_val, uy_val, uz_val, uu, Q);
-            d.f[idx4_out] = feq_out + (1.0f - OMEGA) * fneq_in;
-        }
-    }
-    
-    #pragma unroll GLINKS
-    for (int Q = 0; Q < GLINKS; ++Q) {
-        const idx_t idx4 = gpu_idx_global4(x,y,z,Q);
-        float geq = gpu_compute_truncated_equilibria(phi_val,ux_val,uy_val,uz_val,Q);
-        d.g[idx4] = geq;
-    }
-}
-*/
-
-__global__ void gpuReconstructBoundaries(LBMFields d) {
-    const int x = threadIdx.x + blockIdx.x * blockDim.x;
-    const int y = threadIdx.y + blockIdx.y * blockDim.y;
-    const int z = threadIdx.z + blockIdx.z * blockDim.z;
-
-    bool is_valid_edge = (x < NX && y < NY && z < NZ) &&
-                            (x == 0 || x == NX-1 ||
-                            y == 0 || y == NY-1 || 
-                            z == NZ-1); 
+                                       z == NZ-1); 
     if (!is_valid_edge) return;
     const idx_t idx3 = gpu_idx_global3(x,y,z);
 
@@ -169,6 +114,59 @@ __global__ void gpuReconstructBoundaries(LBMFields d) {
     }
 }
 
+#elif defined(EXTRAPOLATE_BOUNDARIES)
+
+__global__ void gpuReconstructBoundaries(LBMFields d) {
+    const int x = threadIdx.x + blockIdx.x * blockDim.x;
+    const int y = threadIdx.y + blockIdx.y * blockDim.y;
+    const int z = threadIdx.z + blockIdx.z * blockDim.z;
+
+    bool is_valid_edge = (x < NX && y < NY && z < NZ) &&
+                            (x == 0 || x == NX-1 ||
+                             y == 0 || y == NY-1 || 
+                                       z == NZ-1); 
+    if (!is_valid_edge) return;                       
+
+    const idx_t boundary_idx3 = gpu_idx_global3(x,y,z);
+    float rho_val = d.rho[boundary_idx3];
+    float phi_val = d.phi[boundary_idx3];
+    float ux_val = d.ux[boundary_idx3];
+    float uy_val = d.uy[boundary_idx3];
+    float uz_val = d.uz[boundary_idx3];
+    float uu = 1.5f * (ux_val*ux_val + uy_val*uy_val + uz_val*uz_val);
+
+    #pragma unroll FLINKS
+    for (int Q = 0; Q < FLINKS; ++Q) {
+        const int xx = x + CIX[Q];
+        const int yy = y + CIY[Q];
+        const int zz = z + CIZ[Q];
+        const idx_t boundary_idx4 = gpu_idx_global4(x,y,z,Q); 
+        float feq = gpu_compute_equilibria(rho_val,ux_val,uy_val,uz_val,uu,Q);
+        if (xx >= 0 && xx < NX && yy >= 0 && yy < NY && zz >= 0 && zz < NZ) {
+            const idx_t fluid_idx3 = gpu_idx_global3(xx,yy,zz); 
+            float fneq_reg = (W[Q] * 4.5f) * ((CIX[Q]*CIX[Q] - CSSQ) * d.pxx[fluid_idx3] +
+                                              (CIY[Q]*CIY[Q] - CSSQ) * d.pyy[fluid_idx3] +
+                                              (CIZ[Q]*CIZ[Q] - CSSQ) * d.pzz[fluid_idx3] +
+                                               2.0f * CIX[Q] * CIY[Q] * d.pxy[fluid_idx3] +
+                                               2.0f * CIX[Q] * CIZ[Q] * d.pxz[fluid_idx3] +
+                                               2.0f * CIY[Q] * CIZ[Q] * d.pyz[fluid_idx3]);
+            d.f[boundary_idx4] = to_dtype(feq + OMC * fneq_reg);
+        }
+    }
+    #pragma unroll GLINKS
+    for (int Q = 0; Q < GLINKS; ++Q) {
+        const int xx = x + CIX[Q];
+        const int yy = y + CIY[Q];
+        const int zz = z + CIZ[Q];
+        float geq = gpu_compute_truncated_equilibria(phi_val,ux_val,uy_val,uz_val,Q);
+        if (xx >= 0 && xx < NX && yy >= 0 && yy < NY && zz >= 0 && zz < NZ) {
+            const idx_t fluid_idx4 = gpu_idx_global4(xx,yy,zz,Q);
+            d.g[fluid_idx4] = geq;
+        }
+    }
+}
+
+#endif 
 
 // ============================================================================================================== //
 
@@ -209,10 +207,13 @@ __global__ void gpuApplyOutflow(LBMFields d) {
 
     if (x >= NX || y >= NY) return;
 
-    d.phi[gpu_idx_global3(x,y,z)] = d.phi[gpu_idx_global3(x,y,z-1)];
-    d.rho[gpu_idx_global3(x,y,z)] = d.rho[gpu_idx_global3(x,y,z-1)];
-    d.ux[gpu_idx_global3(x,y,z)] = d.ux[gpu_idx_global3(x,y,z-1)];
-    d.uy[gpu_idx_global3(x,y,z)] = d.uy[gpu_idx_global3(x,y,z-1)];
-    d.uz[gpu_idx_global3(x,y,z)] = d.uz[gpu_idx_global3(x,y,z-1)];
+    const idx_t top = gpu_idx_global3(x,y,z);
+    const idx_t below = gpu_idx_global3(x,y,z-1);
+
+    d.phi[top] = d.phi[below];
+    d.rho[top] = d.rho[below];
+    d.ux[top]  = d.ux[below];
+    d.uy[top]  = d.uy[below];
+    d.uz[top]  = d.uz[below];
 }
 

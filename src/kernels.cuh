@@ -23,7 +23,7 @@ __global__ void gpuEvolvePhaseField(LBMFields d); // AD-based
 // =======================================================================================
 // FLUID FIELD EVOLUTION
 // =======================================================================================
-__global__ void gpuMomCollisionStream(LBMFields d); // fused BGK + streaming
+__global__ void gpuCollisionStream(LBMFields d); // fused BGK + streaming
 
 // =======================================================================================
 // DERIVED FIELDS

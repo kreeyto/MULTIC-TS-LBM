@@ -57,11 +57,11 @@ constexpr int TILE_Z = BLOCK_SIZE_Z + 2;
 constexpr size_t DYNAMIC_SHARED_SIZE = 0;
 
 // domain size
-constexpr int MESH = 64;
-constexpr int DIAM = 10;
+constexpr int MESH = 128;
+constexpr int DIAM = 19;
 constexpr int NX   = MESH;
 constexpr int NY   = MESH;
-constexpr int NZ   = MESH*2;
+constexpr int NZ   = MESH*4;
 
 // jet velocity
 constexpr float U_JET = 0.05; 
@@ -75,7 +75,7 @@ constexpr float VISC     = (U_JET * DIAM) / REYNOLDS;      // kinematic viscosit
 constexpr float TAU      = 0.5f + 3.0f * VISC;             // relaxation time
 constexpr float CSSQ     = 1.0f / 3.0f;                    // square of speed of sound
 constexpr float OMEGA    = 1.0f / TAU;                     // relaxation frequency
-constexpr float GAMMA    = 0.15f * 3.0f;                   // sharpening of the interface
+constexpr float GAMMA    = 0.15f * 7.0f;                   // sharpening of the interface
 constexpr float SIGMA    = (U_JET * U_JET * DIAM) / WEBER; // surface tension coefficient
 
 // auxiliary constants

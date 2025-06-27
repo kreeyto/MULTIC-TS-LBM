@@ -1,9 +1,6 @@
 #include "kernels.cuh"
 
-#define INFLOW_CASE_THREE
-
-//#define SIMPLIFIED_REC_BOUNDARIES
-#define EXTRAPOLATE_BOUNDARIES
+#define INFLOW_CASE_ONE
 
 __global__ void gpuApplyInflow(LBMFields d, const int STEP) {
     const int x = threadIdx.x + blockIdx.x * blockDim.x;
@@ -12,44 +9,44 @@ __global__ void gpuApplyInflow(LBMFields d, const int STEP) {
 
     if (x >= NX || y >= NY) return;
 
-    float center_x = (NX-1) * 0.5f;
-    float center_y = (NY-1) * 0.5f;
+    const float center_x = (NX-1) * 0.5f;
+    const float center_y = (NY-1) * 0.5f;
 
-    float dx = x-center_x, dy = y-center_y;
-    float radial_dist = sqrtf(dx*dx + dy*dy);
-    float radius = 0.5f * DIAM;
+    const float dx = x-center_x, dy = y-center_y;
+    const float radial_dist = sqrtf(dx*dx + dy*dy);
+    const float radius = 0.5f * DIAM;
     if (radial_dist > radius) return;
 
     #ifdef INFLOW_CASE_ONE 
-        float radial_dist_norm = radial_dist / radius;
-        float envelope = 1.0f - gpu_smoothstep(0.6f, 1.0f, radial_dist_norm);
-        float profile = 0.5f + 0.5f * tanhf(2.0f * (radius - radial_dist) / 3.0f);
-        float phi_in = profile * envelope; 
+        const float radial_dist_norm = radial_dist / radius;
+        const float envelope = 1.0f - gpu_smoothstep(0.6f, 1.0f, radial_dist_norm);
+        const float profile = 0.5f + 0.5f * tanhf(2.0f * (radius - radial_dist) / 3.0f);
+        const float phi_in = profile * envelope; 
         #ifdef PERTURBATION
-            float uz_in = U_JET * (1.0f + DATAZ[STEP/MACRO_SAVE] * 10.0f) * phi_in;
+            const float uz_in = U_JET * (1.0f + DATAZ[STEP/MACRO_SAVE] * 10.0f) * phi_in;
         #else
-            float uz_in = U_JET * phi_in;
+            const float uz_in = U_JET * phi_in;
         #endif
     #elif defined(INFLOW_CASE_TWO)
-        float radial_dist_norm = radial_dist / radius;
-        float envelope = 1.0f - gpu_smoothstep(0.6f, 1.0f, radial_dist_norm);
-        float phi_in = 1.0f;
+        const float radial_dist_norm = radial_dist / radius;
+        const float envelope = 1.0f - gpu_smoothstep(0.6f, 1.0f, radial_dist_norm);
+        const float phi_in = 1.0f;
         #ifdef PERTURBATION
-            float uz_in = U_JET * (1.0f + DATAZ[STEP/MACRO_SAVE] * 10.0f) * envelope;
+            const float uz_in = U_JET * (1.0f + DATAZ[STEP/MACRO_SAVE] * 10.0f) * envelope;
         #else
-            float uz_in = U_JET * envelope;
+            const float uz_in = U_JET * envelope;
         #endif
     #elif defined(INFLOW_CASE_THREE) 
-        float phi_in = 1.0f;
+        const float phi_in = 1.0f;
         #ifdef PERTURBATION
-            float uz_in = U_JET * (1.0f + DATAZ[STEP/MACRO_SAVE] * 10.0f);
+            const float uz_in = U_JET * (1.0f + DATAZ[STEP/MACRO_SAVE] * 10.0f);
         #else
-            float uz_in = U_JET
+            const float uz_in = U_JET;
         #endif
     #endif
 
-    float rho_val = 1.0f;
-    float uu = 1.5f * (uz_in * uz_in);
+    const float rho_val = 1.0f;
+    const float uu = 1.5f * (uz_in * uz_in);
 
     const idx_t idx3_in = gpu_idx_global3(x,y,z);
     d.rho[idx3_in] = rho_val; // copy density from the inside
@@ -63,7 +60,7 @@ __global__ void gpuApplyInflow(LBMFields d, const int STEP) {
         const int xx = x + CIX[Q];
         const int yy = y + CIY[Q];
         const int zz = z + CIZ[Q];
-        float feq = gpu_compute_equilibria(rho_val,0.0f,0.0f,uz_in,uu,Q);
+        const float feq = gpu_compute_equilibria(rho_val,0.0f,0.0f,uz_in,uu,Q);
         const idx_t streamed_idx4 = gpu_idx_global4(xx,yy,zz,Q);
         d.f[streamed_idx4] = to_dtype(feq);
     }
@@ -72,49 +69,11 @@ __global__ void gpuApplyInflow(LBMFields d, const int STEP) {
         const int xx = x + CIX[Q];
         const int yy = y + CIY[Q];
         const int zz = z + CIZ[Q];
-        float geq = gpu_compute_truncated_equilibria(phi_in,0.0f,0.0f,uz_in,Q);
+        const float geq = gpu_compute_truncated_equilibria(phi_in,0.0f,0.0f,uz_in,Q);
         const idx_t streamed_idx4 = gpu_idx_global4(xx,yy,zz,Q);
         d.g[streamed_idx4] = geq;
     }
 }
-
-#ifdef SIMPLIFIED_REC_BOUNDARIES
-
-__global__ void gpuReconstructBoundaries(LBMFields d) {
-    const int x = threadIdx.x + blockIdx.x * blockDim.x;
-    const int y = threadIdx.y + blockIdx.y * blockDim.y;
-    const int z = threadIdx.z + blockIdx.z * blockDim.z;
-
-    bool is_valid_edge = (x < NX && y < NY && z < NZ) &&
-                            (x == 0 || x == NX-1 ||
-                             y == 0 || y == NY-1 || 
-                                       z == NZ-1); 
-    if (!is_valid_edge) return;
-    const idx_t idx3 = gpu_idx_global3(x,y,z);
-
-    #pragma unroll FLINKS
-    for (int Q = 0; Q < FLINKS; ++Q) {
-        const int xx = x + CIX[Q];
-        const int yy = y + CIY[Q];
-        const int zz = z + CIZ[Q];
-        if (xx >= 0 && xx < NX && yy >= 0 && yy < NY && zz >= 0 && zz < NZ) {
-            const idx_t streamed_idx4 = gpu_idx_global4(xx,yy,zz,Q);
-            d.f[streamed_idx4] = to_dtype(W[Q] * d.rho[idx3] - W[Q]);
-        }
-    }
-    #pragma unroll GLINKS
-    for (int Q = 0; Q < GLINKS; ++Q) {
-        const int xx = x + CIX[Q];
-        const int yy = y + CIY[Q];
-        const int zz = z + CIZ[Q];
-        if (xx >= 0 && xx < NX && yy >= 0 && yy < NY && zz >= 0 && zz < NZ) {
-            const idx_t streamed_idx4 = gpu_idx_global4(xx,yy,zz,Q);
-            d.g[streamed_idx4] = W_G[Q] * d.phi[idx3] - W_G[Q];
-        }
-    }
-}
-
-#elif defined(EXTRAPOLATE_BOUNDARIES)
 
 __global__ void gpuReconstructBoundaries(LBMFields d) {
     const int x = threadIdx.x + blockIdx.x * blockDim.x;
@@ -128,12 +87,12 @@ __global__ void gpuReconstructBoundaries(LBMFields d) {
     if (!is_valid_edge) return;                       
 
     const idx_t boundary_idx3 = gpu_idx_global3(x,y,z);
-    float rho_val = d.rho[boundary_idx3];
-    float phi_val = d.phi[boundary_idx3];
-    float ux_val = d.ux[boundary_idx3];
-    float uy_val = d.uy[boundary_idx3];
-    float uz_val = d.uz[boundary_idx3];
-    float uu = 1.5f * (ux_val*ux_val + uy_val*uy_val + uz_val*uz_val);
+    const float rho_val = d.rho[boundary_idx3];
+    const float phi_val = d.phi[boundary_idx3];
+    const float ux_val = d.ux[boundary_idx3];
+    const float uy_val = d.uy[boundary_idx3];
+    const float uz_val = d.uz[boundary_idx3];
+    const float uu = 1.5f * (ux_val*ux_val + uy_val*uy_val + uz_val*uz_val);
 
     #pragma unroll FLINKS
     for (int Q = 0; Q < FLINKS; ++Q) {
@@ -141,15 +100,15 @@ __global__ void gpuReconstructBoundaries(LBMFields d) {
         const int yy = y + CIY[Q];
         const int zz = z + CIZ[Q];
         const idx_t boundary_idx4 = gpu_idx_global4(x,y,z,Q); 
-        float feq = gpu_compute_equilibria(rho_val,ux_val,uy_val,uz_val,uu,Q);
+        const float feq = gpu_compute_equilibria(rho_val,ux_val,uy_val,uz_val,uu,Q);
         if (xx >= 0 && xx < NX && yy >= 0 && yy < NY && zz >= 0 && zz < NZ) {
             const idx_t fluid_idx3 = gpu_idx_global3(xx,yy,zz); 
-            float fneq_reg = (W[Q] * 4.5f) * ((CIX[Q]*CIX[Q] - CSSQ) * d.pxx[fluid_idx3] +
-                                              (CIY[Q]*CIY[Q] - CSSQ) * d.pyy[fluid_idx3] +
-                                              (CIZ[Q]*CIZ[Q] - CSSQ) * d.pzz[fluid_idx3] +
-                                               2.0f * CIX[Q] * CIY[Q] * d.pxy[fluid_idx3] +
-                                               2.0f * CIX[Q] * CIZ[Q] * d.pxz[fluid_idx3] +
-                                               2.0f * CIY[Q] * CIZ[Q] * d.pyz[fluid_idx3]);
+            const float fneq_reg = (W[Q] * 4.5f) * ((CIX[Q]*CIX[Q] - CSSQ) * d.pxx[fluid_idx3] +
+                                                    (CIY[Q]*CIY[Q] - CSSQ) * d.pyy[fluid_idx3] +
+                                                    (CIZ[Q]*CIZ[Q] - CSSQ) * d.pzz[fluid_idx3] +
+                                                     2.0f * CIX[Q] * CIY[Q] * d.pxy[fluid_idx3] +
+                                                     2.0f * CIX[Q] * CIZ[Q] * d.pxz[fluid_idx3] +
+                                                     2.0f * CIY[Q] * CIZ[Q] * d.pyz[fluid_idx3]);
             d.f[boundary_idx4] = to_dtype(feq + OMC * fneq_reg);
         }
     }
@@ -158,15 +117,13 @@ __global__ void gpuReconstructBoundaries(LBMFields d) {
         const int xx = x + CIX[Q];
         const int yy = y + CIY[Q];
         const int zz = z + CIZ[Q];
-        float geq = gpu_compute_truncated_equilibria(phi_val,ux_val,uy_val,uz_val,Q);
+        const float geq = gpu_compute_truncated_equilibria(phi_val,ux_val,uy_val,uz_val,Q);
         if (xx >= 0 && xx < NX && yy >= 0 && yy < NY && zz >= 0 && zz < NZ) {
             const idx_t fluid_idx4 = gpu_idx_global4(xx,yy,zz,Q);
             d.g[fluid_idx4] = geq;
         }
     }
 }
-
-#endif 
 
 // ============================================================================================================== //
 

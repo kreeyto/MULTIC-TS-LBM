@@ -32,12 +32,12 @@ echo "Compiling to ${EXECUTABLE}..."
 
 nvcc -O3 --restrict \
      -gencode arch=compute_${CC},code=sm_${CC} \
-     -rdc=true --ptxas-options=-v \
+     -rdc=true --ptxas-options=-v -use_fast_math \
      -I"${SRC_DIR}" \
      "${SRC_DIR}/main.cu" \
      "${SRC_DIR}/lbm_init.cu" \
      "${SRC_DIR}/lbm_phase.cu" \
-     "${SRC_DIR}/lbm_core.cu" \
+     "${SRC_DIR}/lbm.cu" \
      "${SRC_DIR}/lbm_bcs.cu" \
      "${SRC_DIR}/lbm_dfields.cu" \
      "${SRC_DIR}/device_setup.cu" \

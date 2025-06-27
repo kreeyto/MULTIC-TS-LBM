@@ -39,14 +39,25 @@ int main(int argc, char* argv[]) {
             gpuApplyInflow<<<numBlocksZ,threadsPerBlockZ,DYNAMIC_SHARED_SIZE,mainStream>>> (lbm,STEP); 
             getLastCudaError("gpuApplyInflow");
 
-        // =============================================================================  //
+        // ============================================================================== //
+
+        // ========================= GRADIENTS & FORCES ========================= //
+
+            gpuPhi<<<numBlocks,threadsPerBlock,DYNAMIC_SHARED_SIZE,mainStream>>> (lbm);
+            getLastCudaError("gpuPhi");
+            gpuGradients<<<numBlocks,threadsPerBlock,DYNAMIC_SHARED_SIZE,mainStream>>> (lbm); 
+            getLastCudaError("gpuGradients");
+            gpuForces<<<numBlocks,threadsPerBlock,DYNAMIC_SHARED_SIZE,mainStream>>> (lbm); 
+            getLastCudaError("gpuForces");
+        
+        // ====================================================================== //
         
         // ========================= COLLISION & STREAMING ========================= //
-            
-            gpuEvolvePhaseField<<<numBlocks,threadsPerBlock,DYNAMIC_SHARED_SIZE,mainStream>>> (lbm); 
-            getLastCudaError("gpuEvolvePhaseField");
+        
             gpuCollisionStream<<<numBlocks,threadsPerBlock,DYNAMIC_SHARED_SIZE,mainStream>>> (lbm); 
             getLastCudaError("gpuCollisionStream");
+            gpuEvolvePhaseField<<<numBlocks,threadsPerBlock,DYNAMIC_SHARED_SIZE,mainStream>>> (lbm); 
+            getLastCudaError("gpuEvolvePhaseField");
 
         // ========================================================================= //    
 
@@ -73,7 +84,7 @@ int main(int argc, char* argv[]) {
         if (STEP % MACRO_SAVE == 0) {
 
             copyAndSaveToBinary(lbm.phi,NX*NY*NZ,SIM_DIR,SIM_ID,STEP,"phi");
-            copyAndSaveToBinary(lbm.uz,NX*NY*NZ,SIM_DIR,SIM_ID,STEP,"uz");
+            //copyAndSaveToBinary(lbm.uz,NX*NY*NZ,SIM_DIR,SIM_ID,STEP,"uz");
             //copyAndSaveToBinary(dfields.vorticity_mag,NX*NY*NZ,SIM_DIR,SIM_ID,STEP,"vorticity_mag");
             //copyAndSaveToBinary(dfields.q_criterion,NX*NY*NZ,SIM_DIR,SIM_ID,STEP,"q_criterion");
 

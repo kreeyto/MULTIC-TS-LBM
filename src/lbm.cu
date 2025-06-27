@@ -44,45 +44,45 @@ __global__ void gpuCollisionStream(LBMFields d) {
     #endif // D3Q27
 
     #ifdef D3Q19
-        float rho_val = (pop[0] + pop[1] + pop[2] + pop[3] + pop[4] + pop[5] + pop[6] + pop[7] + pop[8] + pop[9] + pop[10] + pop[11] + pop[12] + pop[13] + pop[14] + pop[15] + pop[16] + pop[17] + pop[18]) + 1.0f;
+        const float rho_val = (pop[0] + pop[1] + pop[2] + pop[3] + pop[4] + pop[5] + pop[6] + pop[7] + pop[8] + pop[9] + pop[10] + pop[11] + pop[12] + pop[13] + pop[14] + pop[15] + pop[16] + pop[17] + pop[18]) + 1.0f;
     #elif defined(D3Q27)
-        float rho_val = (pop[0] + pop[1] + pop[2] + pop[3] + pop[4] + pop[5] + pop[6] + pop[7] + pop[8] + pop[9] + pop[10] + pop[11] + pop[12] + pop[13] + pop[14] + pop[15] + pop[16] + pop[17] + pop[18] + pop[19] + pop[20] + pop[21] + pop[22] + pop[23] + pop[24] + pop[25] + pop[26]) + 1.0f;
+        const float rho_val = (pop[0] + pop[1] + pop[2] + pop[3] + pop[4] + pop[5] + pop[6] + pop[7] + pop[8] + pop[9] + pop[10] + pop[11] + pop[12] + pop[13] + pop[14] + pop[15] + pop[16] + pop[17] + pop[18] + pop[19] + pop[20] + pop[21] + pop[22] + pop[23] + pop[24] + pop[25] + pop[26]) + 1.0f;
     #endif
 
-    float inv_rho = 1.0f / rho_val;
-    float ffx_val = d.ffx[idx3];
-    float ffy_val = d.ffy[idx3];
-    float ffz_val = d.ffz[idx3];
+    const float inv_rho = 1.0f / rho_val;
+    const float ffx_val = d.ffx[idx3];
+    const float ffy_val = d.ffy[idx3];
+    const float ffz_val = d.ffz[idx3];
 
     #ifdef D3Q19
-        float sum_ux = inv_rho * (pop[1] - pop[2] + pop[7] - pop[8] + pop[9] - pop[10] + pop[13] - pop[14] + pop[15] - pop[16]);
-        float sum_uy = inv_rho * (pop[3] - pop[4] + pop[7] - pop[8] + pop[11] - pop[12] + pop[14] - pop[13] + pop[17] - pop[18]);
-        float sum_uz = inv_rho * (pop[5] - pop[6] + pop[9] - pop[10] + pop[11] - pop[12] + pop[16] - pop[15] + pop[18] - pop[17]);
+        const float sum_ux = inv_rho * (pop[1] - pop[2] + pop[7] - pop[8] + pop[9] - pop[10] + pop[13] - pop[14] + pop[15] - pop[16]);
+        const float sum_uy = inv_rho * (pop[3] - pop[4] + pop[7] - pop[8] + pop[11] - pop[12] + pop[14] - pop[13] + pop[17] - pop[18]);
+        const float sum_uz = inv_rho * (pop[5] - pop[6] + pop[9] - pop[10] + pop[11] - pop[12] + pop[16] - pop[15] + pop[18] - pop[17]);
     #elif defined(D3Q27)
-        float sum_ux = inv_rho * (pop[1] - pop[2] + pop[7] - pop[8] + pop[9] - pop[10] + pop[13] - pop[14] + pop[15] - pop[16] + pop[19] - pop[20] + pop[21] - pop[22] + pop[23] - pop[24] + pop[26] - pop[25]);
-        float sum_uy = inv_rho * (pop[3] - pop[4] + pop[7] - pop[8]  + pop[11] - pop[12] + pop[14] - pop[13] + pop[17] - pop[18] + pop[19] - pop[20] + pop[21] - pop[22] + pop[24] - pop[23] + pop[25] - pop[26]);
-        float sum_uz = inv_rho * (pop[5] - pop[6] + pop[9] - pop[10] + pop[11] - pop[12] + pop[16] - pop[15] + pop[18] - pop[17] + pop[19] - pop[20] + pop[22] - pop[21] + pop[23] - pop[24] + pop[25] - pop[26]);
+        const float sum_ux = inv_rho * (pop[1] - pop[2] + pop[7] - pop[8] + pop[9] - pop[10] + pop[13] - pop[14] + pop[15] - pop[16] + pop[19] - pop[20] + pop[21] - pop[22] + pop[23] - pop[24] + pop[26] - pop[25]);
+        const float sum_uy = inv_rho * (pop[3] - pop[4] + pop[7] - pop[8]  + pop[11] - pop[12] + pop[14] - pop[13] + pop[17] - pop[18] + pop[19] - pop[20] + pop[21] - pop[22] + pop[24] - pop[23] + pop[25] - pop[26]);
+        const float sum_uz = inv_rho * (pop[5] - pop[6] + pop[9] - pop[10] + pop[11] - pop[12] + pop[16] - pop[15] + pop[18] - pop[17] + pop[19] - pop[20] + pop[22] - pop[21] + pop[23] - pop[24] + pop[25] - pop[26]);
     #endif
 
-    float fx_corr = ffx_val * 0.5f * inv_rho;
-    float fy_corr = ffy_val * 0.5f * inv_rho;
-    float fz_corr = ffz_val * 0.5f * inv_rho;
+    const float fx_corr = ffx_val * 0.5f * inv_rho;
+    const float fy_corr = ffy_val * 0.5f * inv_rho;
+    const float fz_corr = ffz_val * 0.5f * inv_rho;
 
-    float ux_val = sum_ux + fx_corr;
-    float uy_val = sum_uy + fy_corr;
-    float uz_val = sum_uz + fz_corr;
+    const float ux_val = sum_ux + fx_corr;
+    const float uy_val = sum_uy + fy_corr;
+    const float uz_val = sum_uz + fz_corr;
 
-    float uu = 1.5f * (ux_val*ux_val + uy_val*uy_val + uz_val*uz_val);
-    float inv_rho_cssq = 3.0f * inv_rho;
+    const float uu = 1.5f * (ux_val*ux_val + uy_val*uy_val + uz_val*uz_val);
+    const float inv_rho_cssq = 3.0f * inv_rho;
 
     float fneq[FLINKS];
     #pragma unroll FLINKS
     for (int Q = 0; Q < FLINKS; ++Q) {
-        float pre_feq = gpu_compute_equilibria(rho_val,ux_val,uy_val,uz_val,uu,Q);
-        float force_corr = COEFF_FORCE * pre_feq * ( (CIX[Q] - ux_val) * ffx_val +
+        const float pre_feq = gpu_compute_equilibria(rho_val,ux_val,uy_val,uz_val,uu,Q);
+        const float force_corr = COEFF_FORCE * pre_feq * ( (CIX[Q] - ux_val) * ffx_val +
                                                      (CIY[Q] - uy_val) * ffy_val +
                                                      (CIZ[Q] - uz_val) * ffz_val ) * inv_rho_cssq;
-        float feq = pre_feq - force_corr;
+        const float feq = pre_feq - force_corr;
         fneq[Q] = pop[Q] - feq;
     }
 
@@ -113,16 +113,16 @@ __global__ void gpuCollisionStream(LBMFields d) {
         const int xx = x + CIX[Q];
         const int yy = y + CIY[Q];
         const int zz = z + CIZ[Q];
-        float feq = gpu_compute_equilibria(rho_val,ux_val,uy_val,uz_val,uu,Q);
-        float force_corr = COEFF_FORCE * feq * ( (CIX[Q] - ux_val) * ffx_val +
-                                                 (CIY[Q] - uy_val) * ffy_val +
-                                                 (CIZ[Q] - uz_val) * ffz_val ) * inv_rho_cssq;
-        float fneq_reg = (W[Q] * 4.5f) * ((CIX[Q]*CIX[Q] - CSSQ) * PXX +
-                                          (CIY[Q]*CIY[Q] - CSSQ) * PYY +
-                                          (CIZ[Q]*CIZ[Q] - CSSQ) * PZZ +
-                                           2.0f * CIX[Q] * CIY[Q] * PXY +
-                                           2.0f * CIX[Q] * CIZ[Q] * PXZ +
-                                           2.0f * CIY[Q] * CIZ[Q] * PYZ);
+        const float feq = gpu_compute_equilibria(rho_val,ux_val,uy_val,uz_val,uu,Q);
+        const float force_corr = COEFF_FORCE * feq * ( (CIX[Q] - ux_val) * ffx_val +
+                                                       (CIY[Q] - uy_val) * ffy_val +
+                                                       (CIZ[Q] - uz_val) * ffz_val ) * inv_rho_cssq;
+        const float fneq_reg = (W[Q] * 4.5f) * ((CIX[Q]*CIX[Q] - CSSQ) * PXX +
+                                                (CIY[Q]*CIY[Q] - CSSQ) * PYY +
+                                                (CIZ[Q]*CIZ[Q] - CSSQ) * PZZ +
+                                                2.0f * CIX[Q] * CIY[Q] * PXY +
+                                                2.0f * CIX[Q] * CIZ[Q] * PXZ +
+                                                2.0f * CIY[Q] * CIZ[Q] * PYZ);
         const idx_t streamed_idx4 = gpu_idx_global4(xx,yy,zz,Q);
         d.f[streamed_idx4] = to_dtype(feq + OMC * fneq_reg + force_corr); 
     }

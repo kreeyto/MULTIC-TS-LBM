@@ -84,7 +84,7 @@ int main(int argc, char* argv[]) {
         if (STEP % MACRO_SAVE == 0) {
 
             copyAndSaveToBinary(lbm.phi,NX*NY*NZ,SIM_DIR,SIM_ID,STEP,"phi");
-            //copyAndSaveToBinary(lbm.uz,NX*NY*NZ,SIM_DIR,SIM_ID,STEP,"uz");
+            copyAndSaveToBinary(lbm.uz,NX*NY*NZ,SIM_DIR,SIM_ID,STEP,"uz");
             //copyAndSaveToBinary(dfields.vorticity_mag,NX*NY*NZ,SIM_DIR,SIM_ID,STEP,"vorticity_mag");
             //copyAndSaveToBinary(dfields.q_criterion,NX*NY*NZ,SIM_DIR,SIM_ID,STEP,"q_criterion");
 
@@ -100,6 +100,7 @@ int main(int argc, char* argv[]) {
     cudaFree(lbm.g);
     cudaFree(lbm.phi); 
     cudaFree(lbm.rho);
+    cudaFree(lbm.ind);
     cudaFree(lbm.normx);
     cudaFree(lbm.normy); 
     cudaFree(lbm.normz);

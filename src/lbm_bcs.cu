@@ -1,6 +1,6 @@
 #include "kernels.cuh"
 
-#define INFLOW_CASE_ONE
+#define INFLOW_CASE_THREE
 
 __global__ void gpuApplyInflow(LBMFields d, const int STEP) {
     const int x = threadIdx.x + blockIdx.x * blockDim.x;
@@ -57,20 +57,20 @@ __global__ void gpuApplyInflow(LBMFields d, const int STEP) {
 
     #pragma unroll FLINKS
     for (int Q = 0; Q < FLINKS; ++Q) {
-        const int xx = x + CIX[Q];
-        const int yy = y + CIY[Q];
-        const int zz = z + CIZ[Q];
+        const int sx = x + CIX[Q];
+        const int sy = y + CIY[Q];
+        const int sz = z + CIZ[Q];
         const float feq = gpu_compute_equilibria(rho_val,0.0f,0.0f,uz_in,uu,Q);
-        const idx_t streamed_idx4 = gpu_idx_global4(xx,yy,zz,Q);
+        const idx_t streamed_idx4 = gpu_idx_global4(sx,sy,sz,Q);
         d.f[streamed_idx4] = to_dtype(feq);
     }
     #pragma unroll GLINKS
     for (int Q = 0; Q < GLINKS; ++Q) {
-        const int xx = x + CIX[Q];
-        const int yy = y + CIY[Q];
-        const int zz = z + CIZ[Q];
+        const int sx = x + CIX[Q];
+        const int sy = y + CIY[Q];
+        const int sz = z + CIZ[Q];
         const float geq = gpu_compute_truncated_equilibria(phi_in,0.0f,0.0f,uz_in,Q);
-        const idx_t streamed_idx4 = gpu_idx_global4(xx,yy,zz,Q);
+        const idx_t streamed_idx4 = gpu_idx_global4(sx,sy,sz,Q);
         d.g[streamed_idx4] = geq;
     }
 }
@@ -96,31 +96,30 @@ __global__ void gpuReconstructBoundaries(LBMFields d) {
 
     #pragma unroll FLINKS
     for (int Q = 0; Q < FLINKS; ++Q) {
-        const int xx = x + CIX[Q];
-        const int yy = y + CIY[Q];
-        const int zz = z + CIZ[Q];
-        const idx_t boundary_idx4 = gpu_idx_global4(x,y,z,Q); 
+        const int sx = x + CIX[Q],      sy = y + CIY[Q],      sz = z + CIZ[Q];
+        const int fx = x + CIX[OPP[Q]], fy = y + CIY[OPP[Q]], fz = z + CIZ[OPP[Q]];
+        const idx_t streamed_boundary_idx4 = gpu_idx_global4(sx,sy,sz,Q); 
         const float feq = gpu_compute_equilibria(rho_val,ux_val,uy_val,uz_val,uu,Q);
-        if (xx >= 0 && xx < NX && yy >= 0 && yy < NY && zz >= 0 && zz < NZ) {
-            const idx_t fluid_idx3 = gpu_idx_global3(xx,yy,zz); 
-            const float fneq_reg = (W[Q] * 4.5f) * ((CIX[Q]*CIX[Q] - CSSQ) * d.pxx[fluid_idx3] +
-                                                    (CIY[Q]*CIY[Q] - CSSQ) * d.pyy[fluid_idx3] +
-                                                    (CIZ[Q]*CIZ[Q] - CSSQ) * d.pzz[fluid_idx3] +
-                                                     2.0f * CIX[Q] * CIY[Q] * d.pxy[fluid_idx3] +
-                                                     2.0f * CIX[Q] * CIZ[Q] * d.pxz[fluid_idx3] +
-                                                     2.0f * CIY[Q] * CIZ[Q] * d.pyz[fluid_idx3]);
-            d.f[boundary_idx4] = to_dtype(feq + OMC * fneq_reg);
+        if (fx >= 0 && fx < NX && fy >= 0 && fy < NY && fz >= 0 && fz < NZ && sx >= 0 && sx < NX && sy >= 0 && sy < NY && sz >= 0 && sz < NZ) {
+            const idx_t neighbor_fluid_idx3 = gpu_idx_global3(fx,fy,fz); 
+            const float fneq_reg = (W[Q] * 4.5f) * ((CIX[Q]*CIX[Q] - CSSQ) * d.pxx[neighbor_fluid_idx3] +
+                                                    (CIY[Q]*CIY[Q] - CSSQ) * d.pyy[neighbor_fluid_idx3] +
+                                                    (CIZ[Q]*CIZ[Q] - CSSQ) * d.pzz[neighbor_fluid_idx3] +
+                                                     2.0f * CIX[Q]*CIY[Q] * d.pxy[neighbor_fluid_idx3] +
+                                                     2.0f * CIX[Q]*CIZ[Q] * d.pxz[neighbor_fluid_idx3] +
+                                                     2.0f * CIY[Q]*CIZ[Q] * d.pyz[neighbor_fluid_idx3]);
+            d.f[streamed_boundary_idx4] = to_dtype(feq + OMC * fneq_reg);
         }
     }
     #pragma unroll GLINKS
     for (int Q = 0; Q < GLINKS; ++Q) {
-        const int xx = x + CIX[Q];
-        const int yy = y + CIY[Q];
-        const int zz = z + CIZ[Q];
+        const int sx = x + CIX[Q];
+        const int sy = y + CIY[Q];
+        const int sz = z + CIZ[Q];
         const float geq = gpu_compute_truncated_equilibria(phi_val,ux_val,uy_val,uz_val,Q);
-        if (xx >= 0 && xx < NX && yy >= 0 && yy < NY && zz >= 0 && zz < NZ) {
-            const idx_t fluid_idx4 = gpu_idx_global4(xx,yy,zz,Q);
-            d.g[fluid_idx4] = geq;
+        if (sx >= 0 && sx < NX && sy >= 0 && sy < NY && sz >= 0 && sz < NZ) {
+            const idx_t streamed_boundary_idx4 = gpu_idx_global4(sx,sy,sz,Q);
+            d.g[streamed_boundary_idx4] = geq;
         }
     }
 }

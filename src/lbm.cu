@@ -80,11 +80,11 @@ __global__ void gpuCollisionStream(LBMFields d) {
     for (int Q = 0; Q < FLINKS; ++Q) {
         const float pre_feq = gpu_compute_equilibria(rho_val,ux_val,uy_val,uz_val,uu,Q);
         const float force_corr = COEFF_FORCE * pre_feq * ( (CIX[Q] - ux_val) * ffx_val +
-                                                     (CIY[Q] - uy_val) * ffy_val +
-                                                     (CIZ[Q] - uz_val) * ffz_val ) * inv_rho_cssq;
+                                                           (CIY[Q] - uy_val) * ffy_val +
+                                                           (CIZ[Q] - uz_val) * ffz_val ) * inv_rho_cssq;
         const float feq = pre_feq - force_corr;
         fneq[Q] = pop[Q] - feq;
-    }
+    } //FOR_EACH_FNEQ; // call unrolled loop
 
     float PXX = fneq[1] + fneq[2] + fneq[7] + fneq[8] + fneq[9] + fneq[10] + fneq[13] + fneq[14] + fneq[15] + fneq[16];
     float PYY = fneq[3] + fneq[4] + fneq[7] + fneq[8] + fneq[11] + fneq[12] + fneq[13] + fneq[14] + fneq[17] + fneq[18];
@@ -125,7 +125,7 @@ __global__ void gpuCollisionStream(LBMFields d) {
                                                 2.0f * CIY[Q] * CIZ[Q] * PYZ);
         const idx_t streamed_idx4 = gpu_idx_global4(xx,yy,zz,Q);
         d.f[streamed_idx4] = to_dtype(feq + OMC * fneq_reg + force_corr); 
-    }
+    } //FOR_EACH_STREAM; // unrolled loop
 
     // write to global memory
     d.rho[idx3] = rho_val;
@@ -133,5 +133,6 @@ __global__ void gpuCollisionStream(LBMFields d) {
     d.uy[idx3] = uy_val; 
     d.uz[idx3] = uz_val;
 }
+
 
 

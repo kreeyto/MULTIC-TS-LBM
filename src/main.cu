@@ -27,7 +27,11 @@ int main(int argc, char* argv[]) {
     cudaStream_t mainStream;
     checkCudaErrors(cudaStreamCreate(&mainStream));
 
-    gpuInitFieldsAndDistributions<<<numBlocks,threadsPerBlock,0,mainStream>>> (lbm); 
+    #ifdef DROPLET_CASE
+        gpuInitDropletShape<<<numBlocks,threadsPerBlock,DYNAMIC_SHARED_SIZE,mainStream>>> (lbm);
+        getLastCudaError("gpuInitDropletShape");
+    #endif
+    gpuInitFieldsAndDistributions<<<numBlocks,threadsPerBlock,DYNAMIC_SHARED_SIZE,mainStream>>> (lbm); 
     getLastCudaError("gpuInitFieldsAndDistributions");
 
     auto START_TIME = std::chrono::high_resolution_clock::now();
@@ -36,8 +40,10 @@ int main(int argc, char* argv[]) {
 
         // =================================== INFLOW =================================== //
 
-            gpuApplyInflow<<<numBlocksZ,threadsPerBlockZ,DYNAMIC_SHARED_SIZE,mainStream>>> (lbm,STEP); 
-            getLastCudaError("gpuApplyInflow");
+            #ifdef JET_CASE
+                gpuApplyInflow<<<numBlocksZ,threadsPerBlockZ,DYNAMIC_SHARED_SIZE,mainStream>>> (lbm,STEP); 
+                getLastCudaError("gpuApplyInflow");
+            #endif
 
         // ============================================================================== //
 
@@ -63,12 +69,17 @@ int main(int argc, char* argv[]) {
 
         // =================================== BOUNDARIES =================================== //
 
-            gpuReconstructBoundaries<<<numBlocks,threadsPerBlock,DYNAMIC_SHARED_SIZE,mainStream>>> (lbm); 
-            getLastCudaError("gpuReconstructBoundaries");
-            gpuApplyPeriodicXY<<<numBlocks,threadsPerBlock,DYNAMIC_SHARED_SIZE,mainStream>>> (lbm);
-            getLastCudaError("gpuApplyPeriodicXY");
-            gpuApplyOutflow<<<numBlocksZ,threadsPerBlockZ,DYNAMIC_SHARED_SIZE,mainStream>>> (lbm);
-            getLastCudaError("gpuApplyOutflow");
+            #ifdef JET_CASE
+                gpuReconstructBoundaries<<<numBlocks,threadsPerBlock,DYNAMIC_SHARED_SIZE,mainStream>>> (lbm); 
+                getLastCudaError("gpuReconstructBoundaries");
+                gpuApplyOutflow<<<numBlocksZ,threadsPerBlockZ,DYNAMIC_SHARED_SIZE,mainStream>>> (lbm);
+                getLastCudaError("gpuApplyOutflow");
+                gpuApplyPeriodicXY<<<numBlocks,threadsPerBlock,DYNAMIC_SHARED_SIZE,mainStream>>> (lbm);
+                getLastCudaError("gpuApplyPeriodicXY");
+            #elif defined(DROPLET_CASE)
+                //gpuReconstructBoundaries<<<numBlocks,threadsPerBlock,DYNAMIC_SHARED_SIZE,mainStream>>> (lbm); 
+                //getLastCudaError("gpuReconstructBoundaries");
+            #endif
 
         // ================================================================================== //
 
@@ -79,11 +90,11 @@ int main(int argc, char* argv[]) {
 
         // ====================================================================================== //
 
-        checkCudaErrors(cudaDeviceSynchronize());
+        //checkCudaErrors(cudaDeviceSynchronize());
 
         if (STEP % MACRO_SAVE == 0) {
 
-            copyAndSaveToBinary(lbm.phi,NX*NY*NZ,SIM_DIR,SIM_ID,STEP,"phi");
+            //copyAndSaveToBinary(lbm.phi,NX*NY*NZ,SIM_DIR,SIM_ID,STEP,"phi");
             copyAndSaveToBinary(lbm.uz,NX*NY*NZ,SIM_DIR,SIM_ID,STEP,"uz");
             //copyAndSaveToBinary(dfields.vorticity_mag,NX*NY*NZ,SIM_DIR,SIM_ID,STEP,"vorticity_mag");
             //copyAndSaveToBinary(dfields.q_criterion,NX*NY*NZ,SIM_DIR,SIM_ID,STEP,"q_criterion");

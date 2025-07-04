@@ -5,6 +5,7 @@
 // ======================================================================================================= //
 //                                          INITIALIZATION                                                 //
 // ======================================================================================================= //
+__global__ void gpuInitDropletShape(LBMFields d); // initialize the droplet shape for the droplet case     //
 __global__ void gpuInitFieldsAndDistributions(LBMFields d); // initialize fields and distributions         //
 // ======================================================================================================= //
 //                                      PHASE FIELD CALCULATIONS                                           //

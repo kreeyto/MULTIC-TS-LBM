@@ -80,15 +80,18 @@
 typedef int ci_t;
 typedef int idx_t;
 
+//#define DROPLET_CASE
+#define JET_CASE
+
 // ====================================================================================================================  //
 
 // first distribution velocity set is dealt by compile flags
 // scalar field related velocity set is set here
 #define G_D3Q7
 
-//#define RUN_MODE
+#define RUN_MODE
 //#define SAMPLE_MODE
-#define DEBUG_MODE
+//#define DEBUG_MODE
 
 #define PERTURBATION
 
@@ -104,29 +107,41 @@ constexpr int TILE_Z = BLOCK_SIZE_Z + 2;
 // dynamic shared memory size 
 constexpr size_t DYNAMIC_SHARED_SIZE = 0;
 
-// domain size
-constexpr int MESH = 128;
-constexpr int DIAM = 19;
-constexpr int NX   = MESH;
-constexpr int NY   = MESH;
-constexpr int NZ   = MESH*2;
+#ifdef JET_CASE
+    // domain size
+    constexpr int MESH = 64;
+    constexpr int DIAM = 10;
+    constexpr int NX   = MESH;
+    constexpr int NY   = MESH;
+    constexpr int NZ   = MESH*4;
+    // jet velocity
+    constexpr float U_JET = 0.05; 
+    // adimensional parameters
+    constexpr int REYNOLDS = 5000; 
+    constexpr int WEBER    = 500; 
+    // general model parameters
+    constexpr float VISC     = (U_JET * DIAM) / REYNOLDS;      // kinematic viscosity
+    constexpr float TAU      = 0.5f + 3.0f * VISC;             // relaxation time
+    constexpr float GAMMA    = 0.15f * 3.0f;                   // sharpening of the interface
+    constexpr float SIGMA    = (U_JET * U_JET * DIAM) / WEBER; // surface tension coefficient
+#elif defined(DROPLET_CASE)
+    // domain size
+    constexpr int MESH = 64;
+    constexpr int DIAM = static_cast<int>(MESH / 4.0f); // droplet diameter
+    constexpr int NX   = MESH;
+    constexpr int NY   = MESH;
+    constexpr int NZ   = MESH;
+    // jet velocity (not used in this case) but defined to avoid compilation errors
+    constexpr float U_JET = 0.05; 
+    // general model parameters
+    constexpr float TAU      = 0.505f;       // relaxation time
+    constexpr float GAMMA    = 0.15f * 7.0f; // sharpening of the interface
+    constexpr float SIGMA    = 0.03f;          // surface tension coefficient
+#endif // FLOW_CASE
 
-// jet velocity
-constexpr float U_JET = 0.05; 
-
-// adimensional parameters
-constexpr int REYNOLDS = 5000; 
-constexpr int WEBER    = 500; 
-
-// general model parameters
-constexpr float VISC     = (U_JET * DIAM) / REYNOLDS;      // kinematic viscosity
-constexpr float TAU      = 0.5f + 3.0f * VISC;             // relaxation time
-constexpr float CSSQ     = 1.0f / 3.0f;                    // square of speed of sound
-constexpr float OMEGA    = 1.0f / TAU;                     // relaxation frequency
-constexpr float GAMMA    = 0.15f * 7.0f;                   // sharpening of the interface
-constexpr float SIGMA    = (U_JET * U_JET * DIAM) / WEBER; // surface tension coefficient
-
-// auxiliary constants
+// general model parameters and auxiliary constants
+constexpr float CSSQ        = 1.0f / 3.0f;  // square of speed of sound
+constexpr float OMEGA       = 1.0f / TAU;   // relaxation frequency
 constexpr float OOS         = 1.0f / 6.0f;  // one over six
 constexpr float OMC         = 1.0f - OMEGA; // complementary of omega
 constexpr float COEFF_FORCE = 0.5f;         // fixed approximation of (1-omega/2), valid in high re limitations
@@ -189,7 +204,7 @@ constexpr float COEFF_FORCE = 0.5f;         // fixed approximation of (1-omega/2
 
 #ifdef RUN_MODE
     constexpr int MACRO_SAVE = 100;
-    constexpr int NSTEPS = 30000;
+    constexpr int NSTEPS = 10000;
 #elif defined(SAMPLE_MODE)
     constexpr int MACRO_SAVE = 100;
     constexpr int NSTEPS = 1000;

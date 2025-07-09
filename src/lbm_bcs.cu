@@ -205,7 +205,7 @@ __global__ void gpuReconstructBoundaries(LBMFields d) {
         const int sz = z + CIZ[Q];
         if (sx >= 0 && sx < NX && sy >= 0 && sy < NY && sz >= 0 && sz < NZ) {
             const idx_t streamed_boundary_idx4 = gpu_idx_global4(sx,sy,sz,Q);
-            d.g[streamed_boundary_idx4] = W[Q] * d.phi[idx3] - W[Q];
+            d.g[streamed_boundary_idx4] = W_G[Q] * d.phi[idx3] - W_G[Q];
         }
     }
 }

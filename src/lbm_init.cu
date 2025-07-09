@@ -17,10 +17,10 @@
         const float center_z = (NZ-1) * 0.5f;
 
         const float dx = (x-center_x) / 2.0f, dy = y-center_y, dz = z-center_z;
+        //const float dx= x-center_x, dy = y-center_y, dz = z-center_z;
         const float radial_dist = sqrtf(dx*dx + dy*dy + dz*dz);
-        const float radius = 0.5 * DIAM;
 
-        const float phi_val = 0.5f + 0.5f * tanhf(2.0f * (radius-radial_dist) / 2.0f);
+        const float phi_val = 0.5f + 0.5f * tanhf(2.0f * (RADIUS-radial_dist) / 3.0f);
         d.phi[idx3] = phi_val;
     }
 #endif

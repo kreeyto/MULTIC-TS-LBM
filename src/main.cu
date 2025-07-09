@@ -90,11 +90,12 @@ int main(int argc, char* argv[]) {
 
         // ====================================================================================== //
 
-        //checkCudaErrors(cudaDeviceSynchronize());
+        checkCudaErrors(cudaDeviceSynchronize());
 
         if (STEP % MACRO_SAVE == 0) {
 
-            //copyAndSaveToBinary(lbm.phi,NX*NY*NZ,SIM_DIR,SIM_ID,STEP,"phi");
+            copyAndSaveToBinary(lbm.phi,NX*NY*NZ,SIM_DIR,SIM_ID,STEP,"phi");
+            copyAndSaveToBinary(lbm.rho,NX*NY*NZ,SIM_DIR,SIM_ID,STEP,"rho");
             copyAndSaveToBinary(lbm.uz,NX*NY*NZ,SIM_DIR,SIM_ID,STEP,"uz");
             //copyAndSaveToBinary(dfields.vorticity_mag,NX*NY*NZ,SIM_DIR,SIM_ID,STEP,"vorticity_mag");
             //copyAndSaveToBinary(dfields.q_criterion,NX*NY*NZ,SIM_DIR,SIM_ID,STEP,"q_criterion");

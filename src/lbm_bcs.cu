@@ -19,39 +19,18 @@ __global__ void gpuApplyInflow(LBMFields d, const int STEP) {
     const float radius = 0.5f * DIAM;
     if (radial_dist > radius) return;
 
-    #ifdef INFLOW_CASE_ONE 
-        const float radial_dist_norm = radial_dist / radius;
-        const float envelope = 1.0f - gpu_smoothstep(0.6f, 1.0f, radial_dist_norm);
-        const float profile = 0.5f + 0.5f * tanhf(2.0f * (radius - radial_dist) / 3.0f);
-        const float phi_in = profile * envelope; 
-        #ifdef PERTURBATION
-            const float uz_in = U_JET * (1.0f + DATAZ[STEP/MACRO_SAVE] * 10.0f) * phi_in;
-        #else
-            const float uz_in = U_JET * phi_in;
-        #endif
-    #elif defined(INFLOW_CASE_TWO)
-        const float radial_dist_norm = radial_dist / radius;
-        const float envelope = 1.0f - gpu_smoothstep(0.6f, 1.0f, radial_dist_norm);
-        const float phi_in = 1.0f;
-        #ifdef PERTURBATION
-            const float uz_in = U_JET * (1.0f + DATAZ[STEP/MACRO_SAVE] * 10.0f) * envelope;
-        #else
-            const float uz_in = U_JET * envelope;
-        #endif
-    #elif defined(INFLOW_CASE_THREE) 
-        const float phi_in = 1.0f;
-        #ifdef PERTURBATION
-            const float uz_in = U_JET * (1.0f + DATAZ[STEP/MACRO_SAVE] * 10.0f);
-        #else
-            const float uz_in = U_JET;
-        #endif
+    const float phi_in = 1.0f;
+    #ifdef PERTURBATION
+        const float uz_in = U_JET * (1.0f + DATAZ[STEP/MACRO_SAVE] * 10.0f);
+    #else
+        const float uz_in = U_JET;
     #endif
 
     const float rho_val = 1.0f;
     const float uu = 1.5f * (uz_in * uz_in);
 
     const idx_t idx3_in = gpu_idx_global3(x,y,z);
-    d.rho[idx3_in] = rho_val; // copy density from the inside
+    d.rho[idx3_in] = rho_val; 
     d.phi[idx3_in] = phi_in;
     d.ux[idx3_in] = 0.0f;
     d.uy[idx3_in] = 0.0f;

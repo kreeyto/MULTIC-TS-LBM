@@ -21,7 +21,7 @@ __global__ void gpuPhi(LBMFields d) {
     pop[5] = d.g[gpu_idx_global4(x,y,z,5)];
     pop[6] = d.g[gpu_idx_global4(x,y,z,6)];
 
-    const float phi_val = (pop[0] + pop[1] + pop[2] + pop[3] + pop[4] + pop[5] + pop[6]) + 1.0f;
+    const float phi_val = pop[0] + pop[1] + pop[2] + pop[3] + pop[4] + pop[5] + pop[6];
         
     d.phi[idx3] = phi_val;
 }
@@ -38,16 +38,18 @@ __global__ void gpuGradients(LBMFields d) {
 
     const idx_t idx3 = gpu_idx_global3(x,y,z);
 
+    // TODO: D3Q19 for gradients
     const float gradx = 0.375f * (d.phi[gpu_idx_global3(x+1,y,z)] - d.phi[gpu_idx_global3(x-1,y,z)]);
     const float grady = 0.375f * (d.phi[gpu_idx_global3(x,y+1,z)] - d.phi[gpu_idx_global3(x,y-1,z)]);
     const float gradz = 0.375f * (d.phi[gpu_idx_global3(x,y,z+1)] - d.phi[gpu_idx_global3(x,y,z-1)]);
-
+    
+    const float phi_val = d.phi[idx3];
     const float grad2 = gradx*gradx + grady*grady + gradz*gradz;
-    const float mag = rsqrtf(grad2 + 1e-6f);
-    const float ind_val = grad2 * mag;
+    const float mag = rsqrtf(grad2 + 1e-9f);
     const float normx_val = gradx * mag;
     const float normy_val = grady * mag;
     const float normz_val = gradz * mag;
+    const float ind_val = phi_val * (1.0f - phi_val) * (normx_val*normx_val + normy_val*normy_val + normz_val*normz_val);
 
     d.normx[idx3] = normx_val;
     d.normy[idx3] = normy_val;
@@ -72,9 +74,17 @@ __global__ void gpuForces(LBMFields d) {
     const float normy_val = d.normy[idx3];
     const float normz_val = d.normz[idx3];
 
-    const float curvature = -0.375f * (d.normx[gpu_idx_global3(x+1,y,z)] - d.normx[gpu_idx_global3(x-1,y,z)] +
-                                       d.normy[gpu_idx_global3(x,y+1,z)] - d.normy[gpu_idx_global3(x,y-1,z)] +
-                                       d.normz[gpu_idx_global3(x,y,z+1)] - d.normz[gpu_idx_global3(x,y,z-1)]);
+    //constexpr ci_t H_CIX[19] = { 0, 1,-1, 0, 0, 0, 0, 1,-1, 1,-1, 0, 0, 1,-1, 1,-1, 0, 0 };
+    //constexpr ci_t H_CIY[19] = { 0, 0, 0, 1,-1, 0, 0, 1,-1, 0, 0, 1,-1,-1, 1, 0, 0, 1,-1 };
+    //constexpr ci_t H_CIZ[19] = { 0, 0, 0, 0, 0, 1,-1, 0, 0, 1,-1, 1,-1, 0, 0,-1, 1,-1, 1 };
+
+    // TODO: D3Q19 for curvature
+    float curvature = 0.0f;
+    if (ind_val > 0.2f) {
+        curvature = -0.375f * (d.normx[gpu_idx_global3(x+1,y,z)] - d.normx[gpu_idx_global3(x-1,y,z)] +
+                               d.normy[gpu_idx_global3(x,y+1,z)] - d.normy[gpu_idx_global3(x,y-1,z)] +
+                               d.normz[gpu_idx_global3(x,y,z+1)] - d.normz[gpu_idx_global3(x,y,z-1)]);
+    }
 
     const float coeff_force = SIGMA * curvature;
     d.ffx[idx3] = coeff_force * normx_val * ind_val;
@@ -101,15 +111,34 @@ __global__ void gpuEvolvePhaseField(LBMFields d) {
     const float normx_val = d.normx[idx3];
     const float normy_val = d.normy[idx3];
     const float normz_val = d.normz[idx3];
-    const float phi_norm = GAMMA * phi_val * (1.0f - phi_val);
-    #pragma unroll GLINKS
-    for (int Q = 0; Q < GLINKS; ++Q) {
-        const int xx = x + CIX[Q];
-        const int yy = y + CIY[Q];
-        const int zz = z + CIZ[Q];
-        const float geq = gpu_compute_truncated_equilibria(phi_val,ux_val,uy_val,uz_val,Q);
-        const float anti_diff = W_G[Q] * phi_norm * (CIX[Q] * normx_val + CIY[Q] * normy_val + CIZ[Q] * normz_val);
-        const idx_t streamed_idx4 = gpu_idx_global4(xx,yy,zz,Q);
-        d.g[streamed_idx4] = geq + anti_diff;
-    }
+
+    // rest 
+    d.g[gpu_idx_global4(x,y,z,0)] = W_G_0 * phi_val;
+
+    // helpers
+    const float phi_norm = W_G_1 * GAMMA * phi_val * (1.0f - phi_val);
+    const float mult_phi = W_G_1 * phi_val;
+    const float a3 = 3.0f * mult_phi;
+
+    // orthogonal 
+    float geq = mult_phi + a3 * ux_val;
+    float anti_diff = phi_norm * normx_val;
+    d.g[gpu_idx_global4(x+1,y,z,1)] = geq + anti_diff;
+    
+    geq = mult_phi - a3 * ux_val;
+    d.g[gpu_idx_global4(x-1,y,z,2)] = geq - anti_diff;
+
+    geq = mult_phi + a3 * uy_val;
+    anti_diff = phi_norm * normy_val;
+    d.g[gpu_idx_global4(x,y+1,z,3)] = geq + anti_diff;
+
+    geq = mult_phi- a3 * uy_val;
+    d.g[gpu_idx_global4(x,y-1,z,4)] = geq - anti_diff;
+
+    geq = mult_phi + a3 * uz_val;
+    anti_diff = phi_norm * normz_val;
+    d.g[gpu_idx_global4(x,y,z+1,5)] = geq + anti_diff;
+
+    geq = mult_phi - a3 * uz_val;
+    d.g[gpu_idx_global4(x,y,z-1,6)] = geq - anti_diff;
 } 

@@ -48,7 +48,7 @@ __global__ void gpuInitFieldsAndDistributions(LBMFields d) {
     #pragma unroll GLINKS
     for (int Q = 0; Q < GLINKS; ++Q) {
         const idx_t idx4 = gpu_idx_global4(x,y,z,Q);
-        d.g[idx4] = W_G[Q] * d.phi[idx3] - W_G[Q];
+        d.g[idx4] = W_G[Q] * d.phi[idx3];
     }
 } 
 

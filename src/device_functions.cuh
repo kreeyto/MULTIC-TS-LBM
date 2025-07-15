@@ -23,7 +23,7 @@ __device__ __forceinline__ float gpu_smoothstep(float edge0, float edge1, float 
 
 __device__ __forceinline__ float gpu_compute_truncated_equilibria(float density, float ux, float uy, float uz, int Q) {
     float cu = 3.0f * (ux*CIX[Q] + uy*CIY[Q] + uz*CIZ[Q]);
-    return W_G[Q] * density * (1.0f + cu) - W_G[Q];
+    return W_G[Q] * density * (1.0f + cu);
 }
 
 __device__ __forceinline__ float gpu_compute_equilibria(float density, float ux, float uy, float uz, float uu, int Q) {

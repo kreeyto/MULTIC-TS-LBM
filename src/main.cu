@@ -20,6 +20,11 @@ int main(int argc, char* argv[]) {
                    (NY + threadsPerBlock.y - 1) / threadsPerBlock.y,
                    (NZ + threadsPerBlock.z - 1) / threadsPerBlock.z);
 
+    //dim3 threadsPerBlockInterior(BLOCK_SIZE_X,BLOCK_SIZE_Y,BLOCK_SIZE_Z);
+    //dim3 numBlocksInterior((NX-2 + threadsPerBlockInterior.x - 1) / threadsPerBlockInterior.x,
+    //                       (NY-2 + threadsPerBlockInterior.y - 1) / threadsPerBlockInterior.y,
+    //                       (NZ-2 + threadsPerBlockInterior.z - 1) / threadsPerBlockInterior.z);
+
     dim3 threadsPerBlockZ(BLOCK_SIZE_X*2,BLOCK_SIZE_Y*2);  
     dim3 numBlocksZ((NX + threadsPerBlockZ.x - 1) / threadsPerBlockZ.x,
                     (NY + threadsPerBlockZ.y - 1) / threadsPerBlockZ.y);
@@ -77,8 +82,8 @@ int main(int argc, char* argv[]) {
                 gpuApplyPeriodicXY<<<numBlocks,threadsPerBlock,DYNAMIC_SHARED_SIZE,mainStream>>> (lbm);
                 getLastCudaError("gpuApplyPeriodicXY");
             #elif defined(DROPLET_CASE)
-                //gpuReconstructBoundaries<<<numBlocks,threadsPerBlock,DYNAMIC_SHARED_SIZE,mainStream>>> (lbm); 
-                //getLastCudaError("gpuReconstructBoundaries");
+                gpuReconstructBoundaries<<<numBlocks,threadsPerBlock,DYNAMIC_SHARED_SIZE,mainStream>>> (lbm); 
+                getLastCudaError("gpuReconstructBoundaries");
             #endif
 
         // ================================================================================== //
@@ -95,8 +100,7 @@ int main(int argc, char* argv[]) {
         if (STEP % MACRO_SAVE == 0) {
 
             copyAndSaveToBinary(lbm.phi,NX*NY*NZ,SIM_DIR,SIM_ID,STEP,"phi");
-            copyAndSaveToBinary(lbm.rho,NX*NY*NZ,SIM_DIR,SIM_ID,STEP,"rho");
-            copyAndSaveToBinary(lbm.uz,NX*NY*NZ,SIM_DIR,SIM_ID,STEP,"uz");
+            //copyAndSaveToBinary(lbm.uz,NX*NY*NZ,SIM_DIR,SIM_ID,STEP,"uz");
             //copyAndSaveToBinary(dfields.vorticity_mag,NX*NY*NZ,SIM_DIR,SIM_ID,STEP,"vorticity_mag");
             //copyAndSaveToBinary(dfields.q_criterion,NX*NY*NZ,SIM_DIR,SIM_ID,STEP,"q_criterion");
 

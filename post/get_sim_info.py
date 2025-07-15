@@ -2,7 +2,7 @@ import os
 import glob
 import numpy as np
 
-__macr_names__ = ['phi','rho','uz']
+__macr_names__ = ['phi','rho','uz','curvature']
 __info__ = dict()
 
 def get_filenames_macr(macr_name, path):

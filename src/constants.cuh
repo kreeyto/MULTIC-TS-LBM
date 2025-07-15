@@ -89,11 +89,11 @@ typedef int idx_t;
 // scalar field related velocity set is set here
 #define G_D3Q7
 
-#define RUN_MODE
-//#define SAMPLE_MODE
+//#define RUN_MODE
+#define SAMPLE_MODE
 //#define DEBUG_MODE
 
-#define PERTURBATION
+//#define PERTURBATION
 
 constexpr int BLOCK_SIZE_X = 8;
 constexpr int BLOCK_SIZE_Y = 8;
@@ -118,11 +118,11 @@ constexpr size_t DYNAMIC_SHARED_SIZE = 0;
     constexpr float U_JET = 0.05; 
     // adimensional parameters
     constexpr int REYNOLDS = 5000; 
-    constexpr int WEBER    = 2500; 
+    constexpr int WEBER    = 500; 
     // general model parameters
     constexpr float VISC     = (U_JET * DIAM) / REYNOLDS;      // kinematic viscosity
     constexpr float TAU      = 0.5f + 3.0f * VISC;             // relaxation time
-    constexpr float GAMMA    = 0.15f * 3.0f;                   // sharpening of the interface
+    constexpr float GAMMA    = 0.3f * 3.0f;                   // sharpening of the interface
     constexpr float SIGMA    = (U_JET * U_JET * DIAM) / WEBER; // surface tension coefficient
 #elif defined(DROPLET_CASE)
     // domain size
@@ -172,6 +172,8 @@ constexpr float COEFF_FORCE = 0.5f;         // fixed approximation of (1-omega/2
 // second distribution related
 #ifdef G_D3Q7
     // velocity set isn't needed since the first 7 components of each direction are the same as d3q19
+    constexpr float W_G_0 = 1.0f / 4.0f;
+    constexpr float W_G_1 = 1.0f / 8.0f;
     constexpr float H_W_G[7] = { 1.0f / 4.0f, 
                                  1.0f / 8.0f, 1.0f / 8.0f, 
                                  1.0f / 8.0f, 1.0f / 8.0f, 
@@ -204,7 +206,7 @@ constexpr float COEFF_FORCE = 0.5f;         // fixed approximation of (1-omega/2
 
 #ifdef RUN_MODE
     constexpr int MACRO_SAVE = 100;
-    constexpr int NSTEPS = 30000;
+    constexpr int NSTEPS = 5000;
 #elif defined(SAMPLE_MODE)
     constexpr int MACRO_SAVE = 100;
     constexpr int NSTEPS = 1000;

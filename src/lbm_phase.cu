@@ -38,17 +38,50 @@ __global__ void gpuGradients(LBMFields d) {
 
     const idx_t idx3 = gpu_idx_global3(x,y,z);
 
-    // TODO: D3Q19 for gradients
-    const float gradx = 0.375f * (d.phi[gpu_idx_global3(x+1,y,z)] - d.phi[gpu_idx_global3(x-1,y,z)]);
-    const float grady = 0.375f * (d.phi[gpu_idx_global3(x,y+1,z)] - d.phi[gpu_idx_global3(x,y-1,z)]);
-    const float gradz = 0.375f * (d.phi[gpu_idx_global3(x,y,z+1)] - d.phi[gpu_idx_global3(x,y,z-1)]);
+    float w_sum_grad_x = W_1_TO_6  * d.phi[gpu_idx_global3(x+1,y,z)]   - W_1_TO_6  * d.phi[gpu_idx_global3(x-1,y,z)]
+                       + W_7_TO_18 * d.phi[gpu_idx_global3(x+1,y+1,z)] - W_7_TO_18 * d.phi[gpu_idx_global3(x-1,y-1,z)]
+                       + W_7_TO_18 * d.phi[gpu_idx_global3(x+1,y,z+1)] - W_7_TO_18 * d.phi[gpu_idx_global3(x-1,y,z-1)]
+                       + W_7_TO_18 * d.phi[gpu_idx_global3(x+1,y-1,z)] - W_7_TO_18 * d.phi[gpu_idx_global3(x-1,y+1,z)]
+                       + W_7_TO_18 * d.phi[gpu_idx_global3(x+1,y,z-1)] - W_7_TO_18 * d.phi[gpu_idx_global3(x-1,y,z+1)];
+
+    float w_sum_grad_y = W_1_TO_6  * d.phi[gpu_idx_global3(x,y+1,z)]   - W_1_TO_6  * d.phi[gpu_idx_global3(x,y-1,z)]
+                       + W_7_TO_18 * d.phi[gpu_idx_global3(x+1,y+1,z)] - W_7_TO_18 * d.phi[gpu_idx_global3(x-1,y-1,z)]
+                       + W_7_TO_18 * d.phi[gpu_idx_global3(x,y+1,z+1)] - W_7_TO_18 * d.phi[gpu_idx_global3(x,y-1,z-1)]
+                       + W_7_TO_18 * d.phi[gpu_idx_global3(x-1,y+1,z)] - W_7_TO_18 * d.phi[gpu_idx_global3(x+1,y-1,z)]
+                       + W_7_TO_18 * d.phi[gpu_idx_global3(x,y+1,z-1)] - W_7_TO_18 * d.phi[gpu_idx_global3(x,y-1,z+1)];
+
+    float w_sum_grad_z = W_1_TO_6  * d.phi[gpu_idx_global3(x,y,z+1)]   - W_1_TO_6  * d.phi[gpu_idx_global3(x,y,z-1)]
+                       + W_7_TO_18 * d.phi[gpu_idx_global3(x+1,y,z+1)] - W_7_TO_18 * d.phi[gpu_idx_global3(x-1,y,z-1)]
+                       + W_7_TO_18 * d.phi[gpu_idx_global3(x,y+1,z+1)] - W_7_TO_18 * d.phi[gpu_idx_global3(x,y-1,z-1)]
+                       + W_7_TO_18 * d.phi[gpu_idx_global3(x-1,y,z+1)] - W_7_TO_18 * d.phi[gpu_idx_global3(x+1,y,z-1)] 
+                       + W_7_TO_18 * d.phi[gpu_idx_global3(x,y-1,z+1)] - W_7_TO_18 * d.phi[gpu_idx_global3(x,y+1,z-1)];
+    #ifdef D3Q27
+    w_sum_grad_x += W_19_TO_26 * d.phi[gpu_idx_global3(x+1,y+1,z+1)] - W_19_TO_26 * d.phi[gpu_idx_global3(x-1,y-1,z-1)]
+                  + W_19_TO_26 * d.phi[gpu_idx_global3(x+1,y+1,z-1)] - W_19_TO_26 * d.phi[gpu_idx_global3(x-1,y-1,z+1)]
+                  + W_19_TO_26 * d.phi[gpu_idx_global3(x+1,y-1,z+1)] - W_19_TO_26 * d.phi[gpu_idx_global3(x-1,y+1,z-1)]
+                  + W_19_TO_26 * d.phi[gpu_idx_global3(x+1,y-1,z-1)] - W_19_TO_26 * d.phi[gpu_idx_global3(x-1,y+1,z+1)];
+
+    w_sum_grad_y += W_19_TO_26 * d.phi[gpu_idx_global3(x+1,y+1,z+1)] - W_19_TO_26 * d.phi[gpu_idx_global3(x-1,y-1,z-1)]
+                  + W_19_TO_26 * d.phi[gpu_idx_global3(x+1,y+1,z-1)] - W_19_TO_26 * d.phi[gpu_idx_global3(x-1,y-1,z+1)]
+                  + W_19_TO_26 * d.phi[gpu_idx_global3(x-1,y+1,z-1)] - W_19_TO_26 * d.phi[gpu_idx_global3(x+1,y-1,z+1)]
+                  + W_19_TO_26 * d.phi[gpu_idx_global3(x-1,y+1,z+1)] - W_19_TO_26 * d.phi[gpu_idx_global3(x+1,y-1,z-1)];
+
+    w_sum_grad_z += W_19_TO_26 * d.phi[gpu_idx_global3(x+1,y+1,z+1)] - W_19_TO_26 * d.phi[gpu_idx_global3(x-1,y-1,z-1)]
+                  + W_19_TO_26 * d.phi[gpu_idx_global3(x-1,y-1,z+1)] - W_19_TO_26 * d.phi[gpu_idx_global3(x+1,y+1,z-1)]
+                  + W_19_TO_26 * d.phi[gpu_idx_global3(x+1,y-1,z+1)] - W_19_TO_26 * d.phi[gpu_idx_global3(x-1,y+1,z-1)]
+                  + W_19_TO_26 * d.phi[gpu_idx_global3(x-1,y+1,z+1)] - W_19_TO_26 * d.phi[gpu_idx_global3(x+1,y-1,z-1)];
+    #endif // D3Q27
+        
+    const float grad_phi_x = 3.0f * w_sum_grad_x;
+    const float grad_phi_y = 3.0f * w_sum_grad_y;
+    const float grad_phi_z = 3.0f * w_sum_grad_z;
     
     const float phi_val = d.phi[idx3];
-    const float grad2 = gradx*gradx + grady*grady + gradz*gradz;
+    const float grad2 = grad_phi_x*grad_phi_x + grad_phi_y*grad_phi_y + grad_phi_z*grad_phi_z;
     const float mag = rsqrtf(grad2 + 1e-9f);
-    const float normx_val = gradx * mag;
-    const float normy_val = grady * mag;
-    const float normz_val = gradz * mag;
+    const float normx_val = grad_phi_x * mag;
+    const float normy_val = grad_phi_y * mag;
+    const float normz_val = grad_phi_z * mag;
     const float ind_val = phi_val * (1.0f - phi_val) * (normx_val*normx_val + normy_val*normy_val + normz_val*normz_val);
 
     d.normx[idx3] = normx_val;
@@ -74,16 +107,37 @@ __global__ void gpuForces(LBMFields d) {
     const float normy_val = d.normy[idx3];
     const float normz_val = d.normz[idx3];
 
-    //constexpr ci_t H_CIX[19] = { 0, 1,-1, 0, 0, 0, 0, 1,-1, 1,-1, 0, 0, 1,-1, 1,-1, 0, 0 };
-    //constexpr ci_t H_CIY[19] = { 0, 0, 0, 1,-1, 0, 0, 1,-1, 0, 0, 1,-1,-1, 1, 0, 0, 1,-1 };
-    //constexpr ci_t H_CIZ[19] = { 0, 0, 0, 0, 0, 1,-1, 0, 0, 1,-1, 1,-1, 0, 0,-1, 1,-1, 1 };
-
-    // TODO: D3Q19 for curvature
     float curvature = 0.0f;
     if (ind_val > 0.2f) {
-        curvature = -0.375f * (d.normx[gpu_idx_global3(x+1,y,z)] - d.normx[gpu_idx_global3(x-1,y,z)] +
-                               d.normy[gpu_idx_global3(x,y+1,z)] - d.normy[gpu_idx_global3(x,y-1,z)] +
-                               d.normz[gpu_idx_global3(x,y,z+1)] - d.normz[gpu_idx_global3(x,y,z-1)]);
+        float w_sum_curv = W_1_TO_6  *  d.normx[gpu_idx_global3(x+1,y,z)] 
+                         - W_1_TO_6  *  d.normx[gpu_idx_global3(x-1,y,z)]
+                         + W_1_TO_6  *  d.normy[gpu_idx_global3(x,y+1,z)] 
+                         - W_1_TO_6  *  d.normy[gpu_idx_global3(x,y-1,z)]
+                         + W_1_TO_6  *  d.normz[gpu_idx_global3(x,y,z+1)] 
+                         - W_1_TO_6  *  d.normz[gpu_idx_global3(x,y,z-1)]
+                         + W_7_TO_18 * (d.normx[gpu_idx_global3(x+1,y+1,z)] + d.normy[gpu_idx_global3(x+1,y+1,z)]) 
+                         - W_7_TO_18 * (d.normx[gpu_idx_global3(x-1,y-1,z)] + d.normy[gpu_idx_global3(x-1,y-1,z)])
+                         + W_7_TO_18 * (d.normx[gpu_idx_global3(x+1,y,z+1)] + d.normz[gpu_idx_global3(x+1,y,z+1)]) 
+                         - W_7_TO_18 * (d.normx[gpu_idx_global3(x-1,y,z+1)] + d.normz[gpu_idx_global3(x-1,y,z+1)])
+                         + W_7_TO_18 * (d.normy[gpu_idx_global3(x,y+1,z+1)] + d.normz[gpu_idx_global3(x,y+1,z+1)]) 
+                         - W_7_TO_18 * (d.normy[gpu_idx_global3(x,y-1,z+1)] + d.normz[gpu_idx_global3(x,y-1,z+1)])
+                         + W_7_TO_18 * (d.normx[gpu_idx_global3(x+1,y-1,z)] - d.normy[gpu_idx_global3(x+1,y-1,z)]) 
+                         - W_7_TO_18 * (d.normx[gpu_idx_global3(x-1,y+1,z)] - d.normy[gpu_idx_global3(x-1,y+1,z)])
+                         + W_7_TO_18 * (d.normx[gpu_idx_global3(x+1,y,z-1)] - d.normz[gpu_idx_global3(x+1,y,z-1)]) 
+                         - W_7_TO_18 * (d.normx[gpu_idx_global3(x-1,y,z-1)] - d.normz[gpu_idx_global3(x-1,y,z-1)])
+                         + W_7_TO_18 * (d.normy[gpu_idx_global3(x,y+1,z-1)] - d.normz[gpu_idx_global3(x,y+1,z-1)]) 
+                         - W_7_TO_18 * (d.normy[gpu_idx_global3(x,y-1,z+1)] - d.normz[gpu_idx_global3(x,y-1,z+1)]);
+        #ifdef D3Q27
+        w_sum_curv += W_19_TO_26 * (d.normx[gpu_idx_global3(x+1,y+1,z+1)] + d.normy[gpu_idx_global3(x+1,y+1,z+1)] + d.normz[gpu_idx_global3(x+1,y+1,z+1)]) 
+                    - W_19_TO_26 * (d.normx[gpu_idx_global3(x-1,y-1,z-1)] + d.normy[gpu_idx_global3(x-1,y-1,z-1)] + d.normz[gpu_idx_global3(x-1,y-1,z-1)])
+                    + W_19_TO_26 * (d.normx[gpu_idx_global3(x+1,y+1,z-1)] + d.normy[gpu_idx_global3(x+1,y+1,z-1)] - d.normz[gpu_idx_global3(x+1,y+1,z-1)]) 
+                    - W_19_TO_26 * (d.normx[gpu_idx_global3(x-1,y-1,z+1)] + d.normy[gpu_idx_global3(x-1,y-1,z+1)] - d.normz[gpu_idx_global3(x-1,y-1,z+1)])
+                    + W_19_TO_26 * (d.normx[gpu_idx_global3(x+1,y-1,z+1)] - d.normy[gpu_idx_global3(x+1,y-1,z+1)] + d.normz[gpu_idx_global3(x+1,y-1,z+1)]) 
+                    - W_19_TO_26 * (d.normx[gpu_idx_global3(x-1,y+1,z-1)] - d.normy[gpu_idx_global3(x-1,y+1,z-1)] + d.normz[gpu_idx_global3(x-1,y+1,z-1)])
+                    + W_19_TO_26 * (d.normx[gpu_idx_global3(x+1,y-1,z-1)] - d.normy[gpu_idx_global3(x+1,y-1,z-1)] - d.normz[gpu_idx_global3(x+1,y-1,z-1)]) 
+                    - W_19_TO_26 * (d.normx[gpu_idx_global3(x-1,y+1,z+1)] - d.normy[gpu_idx_global3(x-1,y+1,z+1)] - d.normz[gpu_idx_global3(x-1,y+1,z+1)]);
+        #endif // D3Q27
+        curvature = -3.0f * w_sum_curv;   
     }
 
     const float coeff_force = SIGMA * curvature;

@@ -33,6 +33,11 @@ __global__ void gpuInitFieldsAndDistributions(LBMFields d) {
     if (x >= NX || y >= NY || z >= NZ) return;
     const idx_t idx3 = gpu_idx_global3(x,y,z);
 
+    const float ux_val = d.ux[idx3];
+    const float uy_val = d.uy[idx3];
+    const float uz_val = d.uz[idx3];
+    const float uu = 1.5f * (ux_val*ux_val + uy_val*uy_val + uz_val*uz_val);
+
     d.rho[idx3] = 1.0f;
     d.pxx[idx3] = 1.0f;
     d.pyy[idx3] = 1.0f;
@@ -43,12 +48,14 @@ __global__ void gpuInitFieldsAndDistributions(LBMFields d) {
     #pragma unroll FLINKS
     for (int Q = 0; Q < FLINKS; ++Q) {
         const idx_t idx4 = gpu_idx_global4(x,y,z,Q);
-        d.f[idx4] = to_dtype(W[Q] * d.rho[idx3] - W[Q]);
+        const float feq = gpu_compute_equilibria(d.rho[idx3],ux_val,uy_val,uz_val,uu,Q);
+        d.f[idx4] = feq;
     }
     #pragma unroll GLINKS
     for (int Q = 0; Q < GLINKS; ++Q) {
         const idx_t idx4 = gpu_idx_global4(x,y,z,Q);
-        d.g[idx4] = W_G[Q] * d.phi[idx3];
+        const float geq = gpu_compute_truncated_equilibria(d.phi[idx3],ux_val,uy_val,uz_val,Q);
+        d.g[idx4] = geq;
     }
 } 
 

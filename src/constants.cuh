@@ -89,8 +89,8 @@ typedef int idx_t;
 // scalar field related velocity set is set here
 #define G_D3Q7
 
-//#define RUN_MODE
-#define SAMPLE_MODE
+#define RUN_MODE
+//#define SAMPLE_MODE
 //#define DEBUG_MODE
 
 //#define PERTURBATION
@@ -113,7 +113,7 @@ constexpr size_t DYNAMIC_SHARED_SIZE = 0;
     constexpr int DIAM = 10;
     constexpr int NX   = MESH;
     constexpr int NY   = MESH;
-    constexpr int NZ   = MESH*4;
+    constexpr int NZ   = MESH*2;
     // jet velocity
     constexpr float U_JET = 0.05; 
     // adimensional parameters
@@ -143,8 +143,8 @@ constexpr size_t DYNAMIC_SHARED_SIZE = 0;
 constexpr float CSSQ        = 1.0f / 3.0f;  // square of speed of sound
 constexpr float OMEGA       = 1.0f / TAU;   // relaxation frequency
 constexpr float OOS         = 1.0f / 6.0f;  // one over six
-constexpr float OMC         = 1.0f - OMEGA; // complementary of omega
-constexpr float COEFF_FORCE = 0.5f;         // fixed approximation of (1-omega/2), valid in high re limitations
+constexpr float OMCO        = 1.0f - OMEGA; // complementary of omega
+constexpr float CSCO        = 1.0f - CSSQ;
 
 // first distribution related
 #ifdef D3Q19 //                 0  1  2  3  4  5  6  7  8  9  10 11 12 13 14 15 16 17 18 
@@ -152,6 +152,9 @@ constexpr float COEFF_FORCE = 0.5f;         // fixed approximation of (1-omega/2
     constexpr ci_t H_CIY[19] = { 0, 0, 0, 1,-1, 0, 0, 1,-1, 0, 0, 1,-1,-1, 1, 0, 0, 1,-1 };
     constexpr ci_t H_CIZ[19] = { 0, 0, 0, 0, 0, 1,-1, 0, 0, 1,-1, 1,-1, 0, 0,-1, 1,-1, 1 };
     constexpr ci_t H_OPP[19] = { 0, 2, 1, 4, 3, 6, 5, 8, 7, 10, 9, 12, 11, 14, 13, 16, 15, 18, 17 };
+    constexpr float W_0       = 1.0f / 3.0f;
+    constexpr float W_1_TO_6  = 1.0f / 18.0f;
+    constexpr float W_7_TO_18 = 1.0f / 36.0f;
     constexpr float H_W[19] = { 1.0f / 3.0f, 
                                 1.0f / 18.0f, 1.0f / 18.0f, 1.0f / 18.0f, 1.0f / 18.0f, 1.0f / 18.0f, 1.0f / 18.0f,
                                 1.0f / 36.0f, 1.0f / 36.0f, 1.0f / 36.0f, 1.0f / 36.0f, 1.0f / 36.0f, 1.0f / 36.0f, 
@@ -161,6 +164,10 @@ constexpr float COEFF_FORCE = 0.5f;         // fixed approximation of (1-omega/2
     constexpr ci_t H_CIX[27] = { 0, 1,-1, 0, 0, 0, 0, 1,-1, 1,-1, 0, 0, 1,-1, 1,-1, 0, 0, 1,-1, 1,-1, 1,-1,-1, 1 };
     constexpr ci_t H_CIY[27] = { 0, 0, 0, 1,-1, 0, 0, 1,-1, 0, 0, 1,-1,-1, 1, 0, 0, 1,-1, 1,-1, 1,-1,-1, 1, 1,-1 };
     constexpr ci_t H_CIZ[27] = { 0, 0, 0, 0, 0, 1,-1, 0, 0, 1,-1, 1,-1, 0, 0,-1, 1,-1, 1, 1,-1,-1, 1, 1,-1, 1,-1 };
+    constexpr float W_0        = 8.0f / 27.0f;
+    constexpr float W_1_TO_6   = 2.0f / 27.0f;
+    constexpr float W_7_TO_18  = 1.0f / 54.0f;
+    constexpr float W_19_TO_26 = 1.0f / 216.0f;
     constexpr float H_W[27] = { 8.0f / 27.0f,
                                 2.0f / 27.0f, 2.0f / 27.0f, 2.0f / 27.0f, 2.0f / 27.0f, 2.0f / 27.0f, 2.0f / 27.0f, 
                                 1.0f / 54.0f, 1.0f / 54.0f, 1.0f / 54.0f, 1.0f / 54.0f, 1.0f / 54.0f, 1.0f / 54.0f, 
@@ -206,7 +213,7 @@ constexpr float COEFF_FORCE = 0.5f;         // fixed approximation of (1-omega/2
 
 #ifdef RUN_MODE
     constexpr int MACRO_SAVE = 100;
-    constexpr int NSTEPS = 5000;
+    constexpr int NSTEPS = 10000;
 #elif defined(SAMPLE_MODE)
     constexpr int MACRO_SAVE = 100;
     constexpr int NSTEPS = 1000;

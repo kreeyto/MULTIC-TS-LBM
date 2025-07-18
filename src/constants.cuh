@@ -93,7 +93,7 @@ typedef int idx_t;
 //#define SAMPLE_MODE
 //#define DEBUG_MODE
 
-//#define PERTURBATION
+#define PERTURBATION
 
 constexpr int BLOCK_SIZE_X = 8;
 constexpr int BLOCK_SIZE_Y = 8;
@@ -152,8 +152,8 @@ constexpr float CSCO        = 1.0f - CSSQ;
     constexpr ci_t H_CIY[19] = { 0, 0, 0, 1,-1, 0, 0, 1,-1, 0, 0, 1,-1,-1, 1, 0, 0, 1,-1 };
     constexpr ci_t H_CIZ[19] = { 0, 0, 0, 0, 0, 1,-1, 0, 0, 1,-1, 1,-1, 0, 0,-1, 1,-1, 1 };
     constexpr ci_t H_OPP[19] = { 0, 2, 1, 4, 3, 6, 5, 8, 7, 10, 9, 12, 11, 14, 13, 16, 15, 18, 17 };
-    constexpr float W_0       = 1.0f / 3.0f;
-    constexpr float W_1_TO_6  = 1.0f / 18.0f;
+    constexpr float W_0 = 1.0f / 3.0f;
+    constexpr float W_1_TO_6 = 1.0f / 18.0f;
     constexpr float W_7_TO_18 = 1.0f / 36.0f;
     constexpr float H_W[19] = { 1.0f / 3.0f, 
                                 1.0f / 18.0f, 1.0f / 18.0f, 1.0f / 18.0f, 1.0f / 18.0f, 1.0f / 18.0f, 1.0f / 18.0f,
@@ -164,9 +164,9 @@ constexpr float CSCO        = 1.0f - CSSQ;
     constexpr ci_t H_CIX[27] = { 0, 1,-1, 0, 0, 0, 0, 1,-1, 1,-1, 0, 0, 1,-1, 1,-1, 0, 0, 1,-1, 1,-1, 1,-1,-1, 1 };
     constexpr ci_t H_CIY[27] = { 0, 0, 0, 1,-1, 0, 0, 1,-1, 0, 0, 1,-1,-1, 1, 0, 0, 1,-1, 1,-1, 1,-1,-1, 1, 1,-1 };
     constexpr ci_t H_CIZ[27] = { 0, 0, 0, 0, 0, 1,-1, 0, 0, 1,-1, 1,-1, 0, 0,-1, 1,-1, 1, 1,-1,-1, 1, 1,-1, 1,-1 };
-    constexpr float W_0        = 8.0f / 27.0f;
-    constexpr float W_1_TO_6   = 2.0f / 27.0f;
-    constexpr float W_7_TO_18  = 1.0f / 54.0f;
+    constexpr float W_0 = 8.0f / 27.0f;
+    constexpr float W_1_TO_6 = 2.0f / 27.0f;
+    constexpr float W_7_TO_18 = 1.0f / 54.0f;
     constexpr float W_19_TO_26 = 1.0f / 216.0f;
     constexpr float H_W[27] = { 8.0f / 27.0f,
                                 2.0f / 27.0f, 2.0f / 27.0f, 2.0f / 27.0f, 2.0f / 27.0f, 2.0f / 27.0f, 2.0f / 27.0f, 

@@ -61,7 +61,7 @@ void initDeviceVars() {
     checkCudaErrors(cudaMemcpyToSymbol(CIY,   &H_CIY,   FLINKS * sizeof(ci_t)));
     checkCudaErrors(cudaMemcpyToSymbol(CIZ,   &H_CIZ,   FLINKS * sizeof(ci_t)));
 
-    checkCudaErrors(cudaMemcpyToSymbol(OPP,   &H_OPP,   FLINKS * sizeof(ci_t)));
+    //checkCudaErrors(cudaMemcpyToSymbol(OPP,   &H_OPP,   FLINKS * sizeof(ci_t)));
 
     #ifdef PERTURBATION
         checkCudaErrors(cudaMemcpyToSymbol(DATAZ, &H_DATAZ, 200 * sizeof(float)));

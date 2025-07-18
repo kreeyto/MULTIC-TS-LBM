@@ -31,8 +31,10 @@ int main(int argc, char* argv[]) {
         gpuInitDropletShape<<<numBlocks,threadsPerBlock,DYNAMIC_SHARED_SIZE,mainStream>>> (lbm);
         getLastCudaError("gpuInitDropletShape");
     #endif
-    gpuInitFieldsAndDistributions<<<numBlocks,threadsPerBlock,DYNAMIC_SHARED_SIZE,mainStream>>> (lbm); 
-    getLastCudaError("gpuInitFieldsAndDistributions");
+    gpuInitFields<<<numBlocks,threadsPerBlock,DYNAMIC_SHARED_SIZE,mainStream>>> (lbm); 
+    getLastCudaError("gpuInitFields");
+    gpuInitDistributions<<<numBlocks,threadsPerBlock,DYNAMIC_SHARED_SIZE,mainStream>>> (lbm); 
+    getLastCudaError("gpuInitDistributions");
 
     auto START_TIME = std::chrono::high_resolution_clock::now();
     for (int STEP = 0; STEP <= NSTEPS ; ++STEP) {
@@ -61,14 +63,12 @@ int main(int argc, char* argv[]) {
         // =================================== BOUNDARIES =================================== //
 
             #ifdef JET_CASE
+                //gpuReconstructBoundaries<<<numBlocks,threadsPerBlock,DYNAMIC_SHARED_SIZE,mainStream>>> (lbm); 
+                //getLastCudaError("gpuReconstructBoundaries");
                 gpuApplyInflow<<<numBlocksZ,threadsPerBlockZ,DYNAMIC_SHARED_SIZE,mainStream>>> (lbm,STEP); 
                 getLastCudaError("gpuApplyInflow");
                 gpuApplyOutflow<<<numBlocksZ,threadsPerBlockZ,DYNAMIC_SHARED_SIZE,mainStream>>> (lbm);
                 getLastCudaError("gpuApplyOutflow");
-                //gpuReconstructBoundaries<<<numBlocks,threadsPerBlock,DYNAMIC_SHARED_SIZE,mainStream>>> (lbm); 
-                //getLastCudaError("gpuReconstructBoundaries");
-                //gpuApplyPeriodicXY<<<numBlocks,threadsPerBlock,DYNAMIC_SHARED_SIZE,mainStream>>> (lbm);
-                //getLastCudaError("gpuApplyPeriodicXY");
             #elif defined(DROPLET_CASE)
                 gpuReconstructBoundaries<<<numBlocks,threadsPerBlock,DYNAMIC_SHARED_SIZE,mainStream>>> (lbm); 
                 getLastCudaError("gpuReconstructBoundaries");

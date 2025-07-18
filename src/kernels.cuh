@@ -5,8 +5,9 @@
 // ======================================================================================================= //
 //                                          INITIALIZATION                                                 //
 // ======================================================================================================= //
-__global__ void gpuInitDropletShape(LBMFields d); // initialize the droplet shape for the droplet case     //
-__global__ void gpuInitFieldsAndDistributions(LBMFields d); // initialize fields and distributions         //
+__global__ void gpuInitDropletShape(LBMFields d);  // initialize the droplet shape for the droplet case    //
+__global__ void gpuInitFields(LBMFields d);        // initialize fields                                    //
+__global__ void gpuInitDistributions(LBMFields d); // initialize distributions                             //
 // ======================================================================================================= //
 //                                      PHASE FIELD CALCULATIONS                                           //
 // ======================================================================================================= //
@@ -23,7 +24,6 @@ __global__ void gpuEvolvePhaseField(LBMFields d); // advection-diffusion of the 
 // ======================================================================================================= //
 __global__ void gpuApplyInflow(LBMFields d, const int STEP); // inflow at z=0                              //
 __global__ void gpuReconstructBoundaries(LBMFields d);       // non-equilibrium extrapolation              //
-__global__ void gpuApplyPeriodicXY(LBMFields d);             // periodicity in xy                          //
 __global__ void gpuApplyOutflow(LBMFields d);                // neumann at z=nz-1                          //
 // ======================================================================================================= //
 //                                          DERIVED FIELDS                                                 //

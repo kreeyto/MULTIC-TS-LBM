@@ -72,13 +72,12 @@ __global__ void gpuCollisionStream(LBMFields d) {
     const float uy_val = sum_uy + fy_corr;
     const float uz_val = sum_uz + fz_corr;
 
-    const float uu = 1.5f * (ux_val*ux_val + uy_val*uy_val + uz_val*uz_val);
     const float inv_rho_cssq = 3.0f * inv_rho;
 
     float fneq[FLINKS];
     #pragma unroll FLINKS
     for (int Q = 0; Q < FLINKS; ++Q) {
-        const float pre_feq = gpu_compute_equilibria(rho_val,ux_val,uy_val,uz_val,uu,Q);
+        const float pre_feq = gpu_compute_equilibria(rho_val,ux_val,uy_val,uz_val,Q);
         const float force_corr = 0.5f * pre_feq * ( (CIX[Q] - ux_val) * ffx_val +
                                                     (CIY[Q] - uy_val) * ffy_val +
                                                     (CIZ[Q] - uz_val) * ffz_val ) * inv_rho_cssq;
@@ -113,16 +112,11 @@ __global__ void gpuCollisionStream(LBMFields d) {
         const int xx = x + CIX[Q];
         const int yy = y + CIY[Q];
         const int zz = z + CIZ[Q];
-        const float feq = gpu_compute_equilibria(rho_val,ux_val,uy_val,uz_val,uu,Q);
+        const float feq = gpu_compute_equilibria(rho_val,ux_val,uy_val,uz_val,Q);
         const float force_corr = 0.5f * feq * ( (CIX[Q] - ux_val) * ffx_val +
                                                 (CIY[Q] - uy_val) * ffy_val +
                                                 (CIZ[Q] - uz_val) * ffz_val ) * inv_rho_cssq;
-        const float fneq_reg = (W[Q] * 4.5f) * ((CIX[Q]*CIX[Q] - CSSQ) * PXX +
-                                                (CIY[Q]*CIY[Q] - CSSQ) * PYY +
-                                                (CIZ[Q]*CIZ[Q] - CSSQ) * PZZ +
-                                                2.0f * CIX[Q] * CIY[Q] * PXY +
-                                                2.0f * CIX[Q] * CIZ[Q] * PXZ +
-                                                2.0f * CIY[Q] * CIZ[Q] * PYZ);
+        const float fneq_reg = gpu_compute_non_equilibria(PXX,PYY,PZZ,PXY,PXZ,PYZ,ux_val,uy_val,uz_val,Q);
         const idx_t streamed_idx4 = gpu_idx_global4(xx,yy,zz,Q);
         d.f[streamed_idx4] = to_dtype(feq + OMCO * fneq_reg + force_corr); 
     } //FOR_EACH_STREAM; // unrolled loop

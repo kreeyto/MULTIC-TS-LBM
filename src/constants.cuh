@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cuda_runtime.h>
+#include <curand_kernel.h>
 #include <iostream>
 #include <vector>
 #include <fstream>
@@ -14,54 +15,6 @@
 #include <stdlib.h>
 #include <builtin_types.h>
 #include <math.h>
-
-/*
-#define FOR_EACH_FNEQ                                                 \
-    X(0)  X(1)  X(2)  X(3)  X(4)  X(5)  X(6)  X(7)  X(8)  X(9)        \
-    X(10) X(11) X(12) X(13) X(14) X(15) X(16) X(17) X(18)
-
-#define X(Q) {                                                        \
-    const float pre_feq##Q = gpu_compute_equilibria(                  \
-        rho_val,ux_val,uy_val,uz_val,uu,Q                             \
-    );                                                                \
-    const float force_corr##Q = COEFF_FORCE * pre_feq##Q              \
-        * ((CIX[Q] - ux_val) * ffx_val                                \
-         + (CIY[Q] - uy_val) * ffy_val                                \
-         + (CIZ[Q] - uz_val) * ffz_val)                               \
-        * inv_rho_cssq;                                               \
-    const float feq##Q = pre_feq##Q - force_corr##Q;                  \
-    fneq[Q] = pop[Q] - feq##Q;                                        \
-}
-
-#define FOR_EACH_STREAM                                         \
-    Y(0)  Y(1)  Y(2)  Y(3)  Y(4)  Y(5)  Y(6)  Y(7)  Y(8)  Y(9)  \
-    Y(10) Y(11) Y(12) Y(13) Y(14) Y(15) Y(16) Y(17) Y(18)
-
-#define Y(Q) {                                                                         \
-    const int xx##Q = x + CIX[Q];                                                      \
-    const int yy##Q = y + CIY[Q];                                                      \
-    const int zz##Q = z + CIZ[Q];                                                      \
-    const float feq##Q = gpu_compute_equilibria(                                       \
-        rho_val,ux_val,uy_val,uz_val,uu,Q                                              \
-    );                                                                                 \
-    const float force_corr##Q = COEFF_FORCE * feq##Q * (                               \
-        (CIX[Q] - ux_val) * ffx_val +                                                  \
-        (CIY[Q] - uy_val) * ffy_val +                                                  \
-        (CIZ[Q] - uz_val) * ffz_val                                                    \
-    ) * inv_rho_cssq;                                                                  \
-    const float fneq_reg##Q = (W[Q] * 4.5f) * (                                        \
-        (CIX[Q]*CIX[Q] - CSSQ) * PXX +                                                 \
-        (CIY[Q]*CIY[Q] - CSSQ) * PYY +                                                 \
-        (CIZ[Q]*CIZ[Q] - CSSQ) * PZZ +                                                 \
-        2.0f * CIX[Q]*CIY[Q] * PXY +                                                   \
-        2.0f * CIX[Q]*CIZ[Q] * PXZ +                                                   \
-        2.0f * CIY[Q]*CIZ[Q] * PYZ                                                     \
-    );                                                                                 \
-    const idx_t streamed_idx4##Q = gpu_idx_global4(xx##Q, yy##Q, zz##Q, Q);            \
-    d.f[streamed_idx4##Q] =                                                            \
-        to_dtype(feq##Q + OMC * fneq_reg##Q + force_corr##Q);                          \
-}   
-*/
 
 #define FP16_COMPRESSION
 
@@ -94,6 +47,7 @@ typedef int idx_t;
 //#define DEBUG_MODE
 
 #define PERTURBATION
+#define NOISE_INTERVAL 10
 
 constexpr int BLOCK_SIZE_X = 8;
 constexpr int BLOCK_SIZE_Y = 8;
@@ -109,11 +63,11 @@ constexpr size_t DYNAMIC_SHARED_SIZE = 0;
 
 #ifdef JET_CASE
     // domain size
-    constexpr int MESH = 64;
-    constexpr int DIAM = 10;
+    constexpr int MESH = 128;
+    constexpr int DIAM = 19;
     constexpr int NX   = MESH;
     constexpr int NY   = MESH;
-    constexpr int NZ   = MESH*2;
+    constexpr int NZ   = MESH*4;
     // jet velocity
     constexpr float U_JET = 0.05; 
     // adimensional parameters

@@ -78,8 +78,8 @@ __global__ void gpuApplyInflow(LBMFields d, const int STEP) {
 
     if (x >= NX || y >= NY) return;
 
-    const float center_x = (NX-1) * 0.5f;
-    const float center_y = (NY-1) * 0.5f;
+    const float center_x = NX * 0.5f;
+    const float center_y = NY * 0.5f;
 
     const float dx = x-center_x, dy = y-center_y;
     const float radial_dist = sqrtf(dx*dx + dy*dy);
@@ -88,11 +88,12 @@ __global__ void gpuApplyInflow(LBMFields d, const int STEP) {
 
     const idx_t idx3_in = gpu_idx_global3(x,y,z);
     const float phi_in = 1.0f;
+    const float uz_in = 
     #ifdef PERTURBATION
-        const float uz_in = U_JET * (1.0f + DATAZ[STEP/MACRO_SAVE] * 10.0f);
+        /* apply perturbation */ U_JET * (1.0f + DATAZ[STEP/MACRO_SAVE] * 10.0f);
     #else
-        const float uz_in = U_JET;
-    #endif
+        /* straightforward */ U_JET;
+    #endif 
 
     const float rho_val = 1.0f;
     d.rho[idx3_in] = rho_val; 
@@ -102,73 +103,81 @@ __global__ void gpuApplyInflow(LBMFields d, const int STEP) {
     d.uz[idx3_in] = uz_in;
 
     // x,y,z+1 -> 5
-    float feq      = gpu_compute_equilibria(d.rho[gpu_idx_global3(x,y,z+1)],0.0f,0.0f,uz_in,5);
-    float fneq_reg = gpu_compute_non_equilibria(d.pxx[gpu_idx_global3(x,y,z+1)],d.pyy[gpu_idx_global3(x,y,z+1)],d.pzz[gpu_idx_global3(x,y,z+1)],
-                                                d.pxy[gpu_idx_global3(x,y,z+1)],d.pxz[gpu_idx_global3(x,y,z+1)],d.pyz[gpu_idx_global3(x,y,z+1)],
-                                                0.0f,0.0f,uz_in,5);
+    int neighbor_idx = gpu_idx_global3(x,y,z+1);
+    float feq      = gpu_compute_equilibria(rho_val,0.0f,0.0f,uz_in,5);
+    float fneq_reg = gpu_compute_non_equilibria(d.pxx[neighbor_idx],d.pyy[neighbor_idx],d.pzz[neighbor_idx],
+                                                d.pxy[neighbor_idx],d.pxz[neighbor_idx],d.pyz[neighbor_idx],
+                                                d.ux[neighbor_idx],d.uy[neighbor_idx],d.uz[neighbor_idx],5);
     d.f[gpu_idx_global4(x,y,z+1,5)] = to_dtype(feq + OMCO * fneq_reg);
 
+    feq = W_G[5] * phi_in * (1.0f + 3.0f * uz_in);
+    d.g[gpu_idx_global4(x,y,z+1,5)] = feq;
+
     // x+1,y,z+1 -> 9
-    feq      = gpu_compute_equilibria(d.rho[gpu_idx_global3(x+1,y,z+1)],0.0f,0.0f,uz_in,9);
-    fneq_reg = gpu_compute_non_equilibria(d.pxx[gpu_idx_global3(x+1,y,z+1)],d.pyy[gpu_idx_global3(x+1,y,z+1)],d.pzz[gpu_idx_global3(x+1,y,z+1)],
-                                          d.pxy[gpu_idx_global3(x+1,y,z+1)],d.pxz[gpu_idx_global3(x+1,y,z+1)],d.pyz[gpu_idx_global3(x+1,y,z+1)],
-                                          0.0f,0.0f,uz_in,9);
+    neighbor_idx = gpu_idx_global3(x+1,y,z+1);
+    feq      = gpu_compute_equilibria(rho_val,0.0f,0.0f,uz_in,9);
+    fneq_reg = gpu_compute_non_equilibria(d.pxx[neighbor_idx],d.pyy[neighbor_idx],d.pzz[neighbor_idx],
+                                          d.pxy[neighbor_idx],d.pxz[neighbor_idx],d.pyz[neighbor_idx],
+                                          d.ux[neighbor_idx],d.uy[neighbor_idx],d.uz[neighbor_idx],9);
     d.f[gpu_idx_global4(x+1,y,z+1,9)] = to_dtype(feq + OMCO * fneq_reg);
 
     // x,y+1,z+1 -> 11
-    feq      = gpu_compute_equilibria(d.rho[gpu_idx_global3(x,y+1,z+1)],0.0f,0.0f,uz_in,11);
-    fneq_reg = gpu_compute_non_equilibria(d.pxx[gpu_idx_global3(x,y+1,z+1)],d.pyy[gpu_idx_global3(x,y+1,z+1)],d.pzz[gpu_idx_global3(x,y+1,z+1)],
-                                          d.pxy[gpu_idx_global3(x,y+1,z+1)],d.pxz[gpu_idx_global3(x,y+1,z+1)],d.pyz[gpu_idx_global3(x,y+1,z+1)],
-                                          0.0f,0.0f,uz_in,11);
+    neighbor_idx = gpu_idx_global3(x,y+1,z+1);
+    feq      = gpu_compute_equilibria(rho_val,0.0f,0.0f,uz_in,11);
+    fneq_reg = gpu_compute_non_equilibria(d.pxx[neighbor_idx],d.pyy[neighbor_idx],d.pzz[neighbor_idx],
+                                          d.pxy[neighbor_idx],d.pxz[neighbor_idx],d.pyz[neighbor_idx],
+                                          d.ux[neighbor_idx],d.uy[neighbor_idx],d.uz[neighbor_idx],11);
     d.f[gpu_idx_global4(x,y+1,z+1,11)] = to_dtype(feq + OMCO * fneq_reg);
 
     // x-1,y,z+1 -> 16
-    feq      = gpu_compute_equilibria(d.rho[gpu_idx_global3(x-1,y,z+1)],0.0f,0.0f,uz_in,16);
-    fneq_reg = gpu_compute_non_equilibria(d.pxx[gpu_idx_global3(x-1,y,z+1)],d.pyy[gpu_idx_global3(x-1,y,z+1)],d.pzz[gpu_idx_global3(x-1,y,z+1)],
-                                          d.pxy[gpu_idx_global3(x-1,y,z+1)],d.pxz[gpu_idx_global3(x-1,y,z+1)],d.pyz[gpu_idx_global3(x-1,y,z+1)],
-                                          0.0f,0.0f,uz_in,16);
+    neighbor_idx = gpu_idx_global3(x-1,y,z+1);
+    feq      = gpu_compute_equilibria(rho_val,0.0f,0.0f,uz_in,16);
+    fneq_reg = gpu_compute_non_equilibria(d.pxx[neighbor_idx],d.pyy[neighbor_idx],d.pzz[neighbor_idx],
+                                          d.pxy[neighbor_idx],d.pxz[neighbor_idx],d.pyz[neighbor_idx],
+                                          d.ux[neighbor_idx],d.uy[neighbor_idx],d.uz[neighbor_idx],16);
     d.f[gpu_idx_global4(x-1,y,z+1,16)] = to_dtype(feq + OMCO * fneq_reg);
 
     // x,y-1,z+1 -> 18
-    feq      = gpu_compute_equilibria(d.rho[gpu_idx_global3(x,y-1,z+1)],0.0f,0.0f,uz_in,18);
-    fneq_reg = gpu_compute_non_equilibria(d.pxx[gpu_idx_global3(x,y-1,z+1)],d.pyy[gpu_idx_global3(x,y-1,z+1)],d.pzz[gpu_idx_global3(x,y-1,z+1)],
-                                          d.pxy[gpu_idx_global3(x,y-1,z+1)],d.pxz[gpu_idx_global3(x,y-1,z+1)],d.pyz[gpu_idx_global3(x,y-1,z+1)],
-                                          0.0f,0.0f,uz_in,18);
+    neighbor_idx = gpu_idx_global3(x,y-1,z+1);
+    feq      = gpu_compute_equilibria(rho_val,0.0f,0.0f,uz_in,18);
+    fneq_reg = gpu_compute_non_equilibria(d.pxx[neighbor_idx],d.pyy[neighbor_idx],d.pzz[neighbor_idx],
+                                          d.pxy[neighbor_idx],d.pxz[neighbor_idx],d.pyz[neighbor_idx],
+                                          d.ux[neighbor_idx],d.uy[neighbor_idx],d.uz[neighbor_idx],18);
     d.f[gpu_idx_global4(x,y-1,z+1,18)] = to_dtype(feq + OMCO * fneq_reg);
 
     #ifdef D3Q27
     // x+1,y+1,z+1 -> 19
-    feq      = gpu_compute_equilibria(d.rho[gpu_idx_global3(x+1,y+1,z+1)],0.0f,0.0f,uz_in,19);
-    fneq_reg = gpu_compute_non_equilibria(d.pxx[gpu_idx_global3(x+1,y+1,z+1)],d.pyy[gpu_idx_global3(x+1,y+1,z+1)],d.pzz[gpu_idx_global3(x+1,y+1,z+1)],
-                                          d.pxy[gpu_idx_global3(x+1,y+1,z+1)],d.pxz[gpu_idx_global3(x+1,y+1,z+1)],d.pyz[gpu_idx_global3(x+1,y+1,z+1)],
-                                          0.0f,0.0f,uz_in,19);
+    neighbor_idx = gpu_idx_global3(x+1,y+1,z+1);
+    feq      = gpu_compute_equilibria(rho_val,0.0f,0.0f,uz_in,19);
+    fneq_reg = gpu_compute_non_equilibria(d.pxx[neighbor_idx],d.pyy[neighbor_idx],d.pzz[neighbor_idx],
+                                          d.pxy[neighbor_idx],d.pxz[neighbor_idx],d.pyz[neighbor_idx],
+                                          d.ux[neighbor_idx],d.uy[neighbor_idx],d.uz[neighbor_idx],19);
     d.f[gpu_idx_global4(x+1,y+1,z+1,19)] = to_dtype(feq + OMCO * fneq_reg);
 
     // x-1,y-1,z+1 -> 22
-    feq      = gpu_compute_equilibria(d.rho[gpu_idx_global3(x-1,y-1,z+1)],0.0f,0.0f,uz_in,22);
-    fneq_reg = gpu_compute_non_equilibria(d.pxx[gpu_idx_global3(x-1,y-1,z+1)],d.pyy[gpu_idx_global3(x-1,y-1,z+1)],d.pzz[gpu_idx_global3(x-1,y-1,z+1)],
-                                          d.pxy[gpu_idx_global3(x-1,y-1,z+1)],d.pxz[gpu_idx_global3(x-1,y-1,z+1)],d.pyz[gpu_idx_global3(x-1,y-1,z+1)],
-                                          0.0f,0.0f,uz_in,22);
+    neighbor_idx = gpu_idx_global3(x-1,y-1,z+1);
+    feq      = gpu_compute_equilibria(rho_val,0.0f,0.0f,uz_in,22);
+    fneq_reg = gpu_compute_non_equilibria(d.pxx[neighbor_idx],d.pyy[neighbor_idx],d.pzz[neighbor_idx],
+                                          d.pxy[neighbor_idx],d.pxz[neighbor_idx],d.pyz[neighbor_idx],
+                                          d.ux[neighbor_idx],d.uy[neighbor_idx],d.uz[neighbor_idx],22);
     d.f[gpu_idx_global4(x-1,y-1,z+1,22)] = to_dtype(feq + OMCO * fneq_reg);
 
     // x+1,y-1,z+1 -> 23
-    feq      = gpu_compute_equilibria(d.rho[gpu_idx_global3(x+1,y-1,z+1)],0.0f,0.0f,uz_in,23);
-    fneq_reg = gpu_compute_non_equilibria(d.pxx[gpu_idx_global3(x+1,y-1,z+1)],d.pyy[gpu_idx_global3(x+1,y-1,z+1)],d.pzz[gpu_idx_global3(x+1,y-1,z+1)],
-                                          d.pxy[gpu_idx_global3(x+1,y-1,z+1)],d.pxz[gpu_idx_global3(x+1,y-1,z+1)],d.pyz[gpu_idx_global3(x+1,y-1,z+1)],
-                                          0.0f,0.0f,uz_in,23);
+    neighbor_idx = gpu_idx_global3(x+1,y-1,z+1);
+    feq      = gpu_compute_equilibria(rho_val,0.0f,0.0f,uz_in,23);
+    fneq_reg = gpu_compute_non_equilibria(d.pxx[neighbor_idx],d.pyy[neighbor_idx],d.pzz[neighbor_idx],
+                                          d.pxy[neighbor_idx],d.pxz[neighbor_idx],d.pyz[neighbor_idx],
+                                          d.ux[neighbor_idx],d.uy[neighbor_idx],d.uz[neighbor_idx],23);
     d.f[gpu_idx_global4(x+1,y-1,z+1,23)] = to_dtype(feq + OMCO * fneq_reg);
 
     // x-1,y+1,z+1 -> 25
-    feq      = gpu_compute_equilibria(d.rho[gpu_idx_global3(x-1,y+1,z+1)],0.0f,0.0f,uz_in,25);
-    fneq_reg = gpu_compute_non_equilibria(d.pxx[gpu_idx_global3(x-1,y+1,z+1)],d.pyy[gpu_idx_global3(x-1,y+1,z+1)],d.pzz[gpu_idx_global3(x-1,y+1,z+1)],
-                                          d.pxy[gpu_idx_global3(x-1,y+1,z+1)],d.pxz[gpu_idx_global3(x-1,y+1,z+1)],d.pyz[gpu_idx_global3(x-1,y+1,z+1)],
-                                          0.0f,0.0f,uz_in,25);
+    neighbor_idx = gpu_idx_global3(x-1,y+1,z+1);
+    feq      = gpu_compute_equilibria(rho_val,0.0f,0.0f,uz_in,25);
+    fneq_reg = gpu_compute_non_equilibria(d.pxx[neighbor_idx],d.pyy[neighbor_idx],d.pzz[neighbor_idx],
+                                          d.pxy[neighbor_idx],d.pxz[neighbor_idx],d.pyz[neighbor_idx],
+                                          d.ux[neighbor_idx],d.uy[neighbor_idx],d.uz[neighbor_idx],25);
     d.f[gpu_idx_global4(x-1,y+1,z+1,25)] = to_dtype(feq + OMCO * fneq_reg);
     #endif // D3Q27
-
-    // x,y,z+1 -> 5
-    feq = W_G[5] * phi_in * (1.0f + 3.0f * uz_in);
-    d.g[gpu_idx_global4(x,y,z+1,5)] = feq;
 }
 
 __global__ void gpuApplyOutflow(LBMFields d) {
@@ -186,79 +195,87 @@ __global__ void gpuApplyOutflow(LBMFields d) {
     d.ux[idx_outer] = d.ux[idx_inner];
     d.uy[idx_outer] = d.uy[idx_inner];
     d.uz[idx_outer] = d.uz[idx_inner];
-    
+
     const float ux_out = d.ux[idx_outer];
     const float uy_out = d.uy[idx_outer];
     const float uz_out = d.uz[idx_outer];
 
     // x,y,z-1 -> 6
-    float feq      = gpu_compute_equilibria(d.rho[gpu_idx_global3(x,y,z-1)],ux_out,uy_out,uz_out,6);
-    float fneq_reg = gpu_compute_non_equilibria(d.pxx[gpu_idx_global3(x,y,z-1)],d.pyy[gpu_idx_global3(x,y,z-1)],d.pzz[gpu_idx_global3(x,y,z-1)],
-                                                d.pxy[gpu_idx_global3(x,y,z-1)],d.pxz[gpu_idx_global3(x,y,z-1)],d.pyz[gpu_idx_global3(x,y,z-1)],
-                                                d.ux[gpu_idx_global3(x,y,z-1)],d.uy[gpu_idx_global3(x,y,z-1)],d.uz[gpu_idx_global3(x,y,z-1)],6);
+    int neighbor_idx = gpu_idx_global3(x,y,z-1);
+    float feq      = gpu_compute_equilibria(d.rho[idx_outer],ux_out,uy_out,uz_out,6);
+    float fneq_reg = gpu_compute_non_equilibria(d.pxx[neighbor_idx],d.pyy[neighbor_idx],d.pzz[neighbor_idx],
+                                                d.pxy[neighbor_idx],d.pxz[neighbor_idx],d.pyz[neighbor_idx],
+                                                d.ux[neighbor_idx],d.uy[neighbor_idx],d.uz[neighbor_idx],6);
     d.f[gpu_idx_global4(x,y,z-1,6)] = to_dtype(feq + OMCO * fneq_reg);
 
+    feq = W_G[6] * d.phi[neighbor_idx] * (1.0f - 3.0f * d.uz[neighbor_idx]);
+    d.g[gpu_idx_global4(x,y,z-1,6)] = feq;
+
     // x-1,y,z-1 -> 10
-    feq      = gpu_compute_equilibria(d.rho[gpu_idx_global3(x-1,y,z-1)],ux_out,uy_out,uz_out,10);
-    fneq_reg = gpu_compute_non_equilibria(d.pxx[gpu_idx_global3(x-1,y,z-1)],d.pyy[gpu_idx_global3(x-1,y,z-1)],d.pzz[gpu_idx_global3(x-1,y,z-1)],
-                                          d.pxy[gpu_idx_global3(x-1,y,z-1)],d.pxz[gpu_idx_global3(x-1,y,z-1)],d.pyz[gpu_idx_global3(x-1,y,z-1)],
-                                          d.ux[gpu_idx_global3(x-1,y,z-1)],d.uy[gpu_idx_global3(x-1,y,z-1)],d.uz[gpu_idx_global3(x-1,y,z-1)],10);
+    neighbor_idx = gpu_idx_global3(x-1,y,z-1);
+    feq      = gpu_compute_equilibria(d.rho[idx_outer],ux_out,uy_out,uz_out,10);
+    fneq_reg = gpu_compute_non_equilibria(d.pxx[neighbor_idx],d.pyy[neighbor_idx],d.pzz[neighbor_idx],
+                                          d.pxy[neighbor_idx],d.pxz[neighbor_idx],d.pyz[neighbor_idx],
+                                          d.ux[neighbor_idx],d.uy[neighbor_idx],d.uz[neighbor_idx],10);
     d.f[gpu_idx_global4(x-1,y,z-1,10)] = to_dtype(feq + OMCO * fneq_reg);
 
     // x,y-1,z-1 -> 12
-    feq      = gpu_compute_equilibria(d.rho[gpu_idx_global3(x,y-1,z-1)],ux_out,uy_out,uz_out,12);
-    fneq_reg = gpu_compute_non_equilibria(d.pxx[gpu_idx_global3(x,y-1,z-1)],d.pyy[gpu_idx_global3(x,y-1,z-1)],d.pzz[gpu_idx_global3(x,y-1,z-1)],
-                                          d.pxy[gpu_idx_global3(x,y-1,z-1)],d.pxz[gpu_idx_global3(x,y-1,z-1)],d.pyz[gpu_idx_global3(x,y-1,z-1)],
-                                          d.ux[gpu_idx_global3(x,y-1,z-1)],d.uy[gpu_idx_global3(x,y-1,z-1)],d.uz[gpu_idx_global3(x,y-1,z-1)],12);
+    neighbor_idx = gpu_idx_global3(x,y-1,z-1);
+    feq      = gpu_compute_equilibria(d.rho[idx_outer],ux_out,uy_out,uz_out,12);
+    fneq_reg = gpu_compute_non_equilibria(d.pxx[neighbor_idx],d.pyy[neighbor_idx],d.pzz[neighbor_idx],
+                                          d.pxy[neighbor_idx],d.pxz[neighbor_idx],d.pyz[neighbor_idx],
+                                          d.ux[neighbor_idx],d.uy[neighbor_idx],d.uz[neighbor_idx],12);
     d.f[gpu_idx_global4(x,y-1,z-1,12)] = to_dtype(feq + OMCO * fneq_reg);
 
     // x+1,y,z-1 -> 15
-    feq      = gpu_compute_equilibria(d.rho[gpu_idx_global3(x+1,y,z-1)],ux_out,uy_out,uz_out,15);
-    fneq_reg = gpu_compute_non_equilibria(d.pxx[gpu_idx_global3(x+1,y,z-1)],d.pyy[gpu_idx_global3(x+1,y,z-1)],d.pzz[gpu_idx_global3(x+1,y,z-1)],
-                                          d.pxy[gpu_idx_global3(x+1,y,z-1)],d.pxz[gpu_idx_global3(x+1,y,z-1)],d.pyz[gpu_idx_global3(x+1,y,z-1)],
-                                          d.ux[gpu_idx_global3(x+1,y,z-1)],d.uy[gpu_idx_global3(x+1,y,z-1)],d.uz[gpu_idx_global3(x+1,y,z-1)],15);
+    neighbor_idx = gpu_idx_global3(x+1,y,z-1);
+    feq      = gpu_compute_equilibria(d.rho[idx_outer],ux_out,uy_out,uz_out,15);
+    fneq_reg = gpu_compute_non_equilibria(d.pxx[neighbor_idx],d.pyy[neighbor_idx],d.pzz[neighbor_idx],
+                                          d.pxy[neighbor_idx],d.pxz[neighbor_idx],d.pyz[neighbor_idx],
+                                          d.ux[neighbor_idx],d.uy[neighbor_idx],d.uz[neighbor_idx],15);
     d.f[gpu_idx_global4(x+1,y,z-1,15)] = to_dtype(feq + OMCO * fneq_reg);
 
     // x,y+1,z-1 -> 17
-    feq      = gpu_compute_equilibria(d.rho[gpu_idx_global3(x,y+1,z-1)],ux_out,uy_out,uz_out,17);
-    fneq_reg = gpu_compute_non_equilibria(d.pxx[gpu_idx_global3(x,y+1,z-1)],d.pyy[gpu_idx_global3(x,y+1,z-1)],d.pzz[gpu_idx_global3(x,y+1,z-1)],
-                                          d.pxy[gpu_idx_global3(x,y+1,z-1)],d.pxz[gpu_idx_global3(x,y+1,z-1)],d.pyz[gpu_idx_global3(x,y+1,z-1)],
-                                          d.ux[gpu_idx_global3(x,y+1,z-1)],d.uy[gpu_idx_global3(x,y+1,z-1)],d.uz[gpu_idx_global3(x,y+1,z-1)],17);
+    neighbor_idx = gpu_idx_global3(x,y+1,z-1);
+    feq      = gpu_compute_equilibria(d.rho[idx_outer],ux_out,uy_out,uz_out,17);
+    fneq_reg = gpu_compute_non_equilibria(d.pxx[neighbor_idx],d.pyy[neighbor_idx],d.pzz[neighbor_idx],
+                                          d.pxy[neighbor_idx],d.pxz[neighbor_idx],d.pyz[neighbor_idx],
+                                          d.ux[neighbor_idx],d.uy[neighbor_idx],d.uz[neighbor_idx],17);
     d.f[gpu_idx_global4(x,y+1,z-1,17)] = to_dtype(feq + OMCO * fneq_reg);
 
     #ifdef D3Q27
     // x-1,y-1,z-1 -> 20
-    feq = gpu_compute_equilibria(d.rho[gpu_idx_global3(x-1,y-1,z-1)],ux_out,uy_out,uz_out,20);
-    fneq_reg = gpu_compute_non_equilibria(d.pxx[gpu_idx_global3(x-1,y-1,z-1)],d.pyy[gpu_idx_global3(x-1,y-1,z-1)],d.pzz[gpu_idx_global3(x-1,y-1,z-1)],
-                                          d.pxy[gpu_idx_global3(x-1,y-1,z-1)],d.pxz[gpu_idx_global3(x-1,y-1,z-1)],d.pyz[gpu_idx_global3(x-1,y-1,z-1)],
-                                          d.ux[gpu_idx_global3(x-1,y-1,z-1)],d.uy[gpu_idx_global3(x-1,y-1,z-1)],d.uz[gpu_idx_global3(x-1,y-1,z-1)],20);
+    neighbor_idx = gpu_idx_global3(x-1,y-1,z-1);
+    feq = gpu_compute_equilibria(d.rho[idx_outer],ux_out,uy_out,uz_out,20);
+    fneq_reg = gpu_compute_non_equilibria(d.pxx[neighbor_idx],d.pyy[neighbor_idx],d.pzz[neighbor_idx],
+                                          d.pxy[neighbor_idx],d.pxz[neighbor_idx],d.pyz[neighbor_idx],
+                                          d.ux[neighbor_idx],d.uy[neighbor_idx],d.uz[neighbor_idx],20);
     d.f[gpu_idx_global4(x-1,y-1,z-1,20)] = to_dtype(feq + OMCO * fneq_reg);
 
     // x+1,y+1,z-1 -> 21
-    feq = gpu_compute_equilibria(d.rho[gpu_idx_global3(x+1,y+1,z-1)],ux_out,uy_out,uz_out,21);
-    fneq_reg = gpu_compute_non_equilibria(d.pxx[gpu_idx_global3(x+1,y+1,z-1)],d.pyy[gpu_idx_global3(x+1,y+1,z-1)],d.pzz[gpu_idx_global3(x+1,y+1,z-1)],
-                                          d.pxy[gpu_idx_global3(x+1,y+1,z-1)],d.pxz[gpu_idx_global3(x+1,y+1,z-1)],d.pyz[gpu_idx_global3(x+1,y+1,z-1)],
-                                          d.ux[gpu_idx_global3(x+1,y+1,z-1)],d.uy[gpu_idx_global3(x+1,y+1,z-1)],d.uz[gpu_idx_global3(x+1,y+1,z-1)],21);
+    neighbor_idx = gpu_idx_global3(x+1,y+1,z-1);
+    feq = gpu_compute_equilibria(d.rho[idx_outer],ux_out,uy_out,uz_out,21);
+    fneq_reg = gpu_compute_non_equilibria(d.pxx[neighbor_idx],d.pyy[neighbor_idx],d.pzz[neighbor_idx],
+                                          d.pxy[neighbor_idx],d.pxz[neighbor_idx],d.pyz[neighbor_idx],
+                                          d.ux[neighbor_idx],d.uy[neighbor_idx],d.uz[neighbor_idx],21);
     d.f[gpu_idx_global4(x+1,y+1,z-1,21)] = to_dtype(feq + OMCO * fneq_reg);
 
     // x-1,y+1,z-1 -> 24
-    feq = gpu_compute_equilibria(d.rho[gpu_idx_global3(x-1,y+1,z-1)],ux_out,uy_out,uz_out,24);
-    fneq_reg = gpu_compute_non_equilibria(d.pxx[gpu_idx_global3(x-1,y+1,z-1)],d.pyy[gpu_idx_global3(x-1,y+1,z-1)],d.pzz[gpu_idx_global3(x-1,y+1,z-1)],
-                                          d.pxy[gpu_idx_global3(x-1,y+1,z-1)],d.pxz[gpu_idx_global3(x-1,y+1,z-1)],d.pyz[gpu_idx_global3(x-1,y+1,z-1)],
-                                          d.ux[gpu_idx_global3(x-1,y+1,z-1)],d.uy[gpu_idx_global3(x-1,y+1,z-1)],d.uz[gpu_idx_global3(x-1,y+1,z-1)],24);
+    neighbor_idx = gpu_idx_global3(x-1,y+1,z-1);
+    feq = gpu_compute_equilibria(d.rho[idx_outer],ux_out,uy_out,uz_out,24);
+    fneq_reg = gpu_compute_non_equilibria(d.pxx[neighbor_idx],d.pyy[neighbor_idx],d.pzz[neighbor_idx],
+                                          d.pxy[neighbor_idx],d.pxz[neighbor_idx],d.pyz[neighbor_idx],
+                                          d.ux[neighbor_idx],d.uy[neighbor_idx],d.uz[neighbor_idx],24);
     d.f[gpu_idx_global4(x-1,y+1,z-1,24)] = to_dtype(feq + OMCO * fneq_reg);
 
     // x+1,y-1,z-1 -> 26
-    feq = gpu_compute_equilibria(d.rho[gpu_idx_global3(x+1,y-1,z-1)],ux_out,uy_out,uz_out,26);
-    fneq_reg = gpu_compute_non_equilibria(d.pxx[gpu_idx_global3(x+1,y-1,z-1)],d.pyy[gpu_idx_global3(x+1,y-1,z-1)],d.pzz[gpu_idx_global3(x+1,y-1,z-1)],
-                                          d.pxy[gpu_idx_global3(x+1,y-1,z-1)],d.pxz[gpu_idx_global3(x+1,y-1,z-1)],d.pyz[gpu_idx_global3(x+1,y-1,z-1)],
-                                          d.ux[gpu_idx_global3(x+1,y-1,z-1)],d.uy[gpu_idx_global3(x+1,y-1,z-1)],d.uz[gpu_idx_global3(x+1,y-1,z-1)],26);
+    neighbor_idx = gpu_idx_global3(x+1,y-1,z-1);
+    feq = gpu_compute_equilibria(d.rho[idx_outer],ux_out,uy_out,uz_out,26);
+    fneq_reg = gpu_compute_non_equilibria(d.pxx[neighbor_idx],d.pyy[neighbor_idx],d.pzz[neighbor_idx],
+                                          d.pxy[neighbor_idx],d.pxz[neighbor_idx],d.pyz[neighbor_idx],
+                                          d.ux[neighbor_idx],d.uy[neighbor_idx],d.uz[neighbor_idx],26);
     d.f[gpu_idx_global4(x+1,y-1,z-1,26)] = to_dtype(feq + OMCO * fneq_reg);
     #endif
-
-    // x,y,z-1 -> 6
-    feq = W_G[6] * d.phi[gpu_idx_global3(x,y,z-1)] * (1 - 3 * 0.05);
-    d.g[gpu_idx_global4(x,y,z-1,6)] = feq;
 }
 
 #elif defined(DROPLET_CASE)

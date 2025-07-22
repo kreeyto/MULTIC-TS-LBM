@@ -40,10 +40,7 @@ __device__ __forceinline__ float gpu_compute_equilibria(const float density, con
     #endif
 }
 
-__device__ __forceinline__ float gpu_compute_non_equilibria(const float PXX, const float PYY, const float PZZ,
-                                                            const float PXY, const float PXZ, const float PYZ, 
-                                                            const float ux, const float uy, const float uz, const int Q) {
-
+__device__ __forceinline__ float gpu_compute_non_equilibria(const float PXX, const float PYY, const float PZZ, const float PXY, const float PXZ, const float PYZ,  const float ux, const float uy, const float uz, const int Q) {
     #ifdef D3Q19
         return (W[Q] * 4.5f) * ((CIX[Q]*CIX[Q] - CSSQ) * PXX + 
                                 (CIY[Q]*CIY[Q] - CSSQ) * PYY + 

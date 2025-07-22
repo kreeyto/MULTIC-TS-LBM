@@ -45,6 +45,13 @@ void initDeviceVars() {
     checkCudaErrors(cudaMalloc(&dfields.vorticity_mag, SIZE));
     checkCudaErrors(cudaMalloc(&dfields.q_criterion,   SIZE));
 
+    checkCudaErrors(cudaMemset(lbm.pxx,   0, SIZE));
+    checkCudaErrors(cudaMemset(lbm.pyy,   0, SIZE));
+    checkCudaErrors(cudaMemset(lbm.pzz,   0, SIZE));
+    checkCudaErrors(cudaMemset(lbm.pxy,   0, SIZE));
+    checkCudaErrors(cudaMemset(lbm.pxz,   0, SIZE));
+    checkCudaErrors(cudaMemset(lbm.pyz,   0, SIZE));
+
     checkCudaErrors(cudaMemset(lbm.ux,    0, SIZE));
     checkCudaErrors(cudaMemset(lbm.uy,    0, SIZE));
     checkCudaErrors(cudaMemset(lbm.uz,    0, SIZE));

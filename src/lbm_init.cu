@@ -85,12 +85,5 @@ __global__ void gpuInitInflowRegion(LBMFields d) {
     d.uz[idx3] = uz_val;
 }
 
-__global__ void initRandomStates(curandState *states, unsigned long seed) {
-    int x = threadIdx.x + blockIdx.x * blockDim.x;
-    int y = threadIdx.y + blockIdx.y * blockDim.y;
-    if (x >= NX || y >= NY) return;
 
-    int tid = x + y * NX;
-    curand_init(seed, tid, 0, &states[tid]);
-}
 

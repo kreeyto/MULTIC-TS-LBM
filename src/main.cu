@@ -65,12 +65,12 @@ int main(int argc, char* argv[]) {
         // =================================== BOUNDARIES =================================== //
 
             #ifdef JET_CASE
-                //gpuReconstructBoundaries<<<numBlocks,threadsPerBlock,DYNAMIC_SHARED_SIZE,mainStream>>> (lbm); 
-                //getLastCudaError("gpuReconstructBoundaries");
                 gpuApplyInflow<<<numBlocksZ,threadsPerBlockZ,DYNAMIC_SHARED_SIZE,mainStream>>> (lbm,STEP); 
                 getLastCudaError("gpuApplyInflow");
                 gpuApplyOutflow<<<numBlocksZ,threadsPerBlockZ,DYNAMIC_SHARED_SIZE,mainStream>>> (lbm);
                 getLastCudaError("gpuApplyOutflow");
+                gpuApplyPeriodic<<<numBlocks,threadsPerBlock,DYNAMIC_SHARED_SIZE,mainStream>>> (lbm);
+                getLastCudaError("gpuApplyPeriodic");
             #elif defined(DROPLET_CASE)
                 gpuReconstructBoundaries<<<numBlocks,threadsPerBlock,DYNAMIC_SHARED_SIZE,mainStream>>> (lbm); 
                 getLastCudaError("gpuReconstructBoundaries");

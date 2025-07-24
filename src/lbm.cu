@@ -11,18 +11,21 @@ __global__ void gpuCollisionStream(LBMFields d) {
         z == 0 || z == NZ-1) return;
 
     const idx_t idx3 = gpu_idx_global3(x,y,z);
+
+    float omega_loc = gpu_local_omega(z);
+    const float omco_loc = 1.0f - omega_loc;
         
     float pop[FLINKS];
-    pop[ 0] = from_dtype(d.f[gpu_idx_global4(x,y,z, 0)]);
-    pop[ 1] = from_dtype(d.f[gpu_idx_global4(x,y,z, 1)]);
-    pop[ 2] = from_dtype(d.f[gpu_idx_global4(x,y,z, 2)]);
-    pop[ 3] = from_dtype(d.f[gpu_idx_global4(x,y,z, 3)]);
-    pop[ 4] = from_dtype(d.f[gpu_idx_global4(x,y,z, 4)]);
-    pop[ 5] = from_dtype(d.f[gpu_idx_global4(x,y,z, 5)]); 
-    pop[ 6] = from_dtype(d.f[gpu_idx_global4(x,y,z, 6)]);
-    pop[ 7] = from_dtype(d.f[gpu_idx_global4(x,y,z, 7)]);
-    pop[ 8] = from_dtype(d.f[gpu_idx_global4(x,y,z, 8)]);
-    pop[ 9] = from_dtype(d.f[gpu_idx_global4(x,y,z, 9)]);
+    pop[0]  = from_dtype(d.f[gpu_idx_global4(x,y,z,0)]);
+    pop[1]  = from_dtype(d.f[gpu_idx_global4(x,y,z,1)]);
+    pop[2]  = from_dtype(d.f[gpu_idx_global4(x,y,z,2)]);
+    pop[3]  = from_dtype(d.f[gpu_idx_global4(x,y,z,3)]);
+    pop[4]  = from_dtype(d.f[gpu_idx_global4(x,y,z,4)]);
+    pop[5]  = from_dtype(d.f[gpu_idx_global4(x,y,z,5)]); 
+    pop[6]  = from_dtype(d.f[gpu_idx_global4(x,y,z,6)]);
+    pop[7]  = from_dtype(d.f[gpu_idx_global4(x,y,z,7)]);
+    pop[8]  = from_dtype(d.f[gpu_idx_global4(x,y,z,8)]);
+    pop[9]  = from_dtype(d.f[gpu_idx_global4(x,y,z,9)]);
     pop[10] = from_dtype(d.f[gpu_idx_global4(x,y,z,10)]);
     pop[11] = from_dtype(d.f[gpu_idx_global4(x,y,z,11)]);
     pop[12] = from_dtype(d.f[gpu_idx_global4(x,y,z,12)]);
@@ -118,7 +121,7 @@ __global__ void gpuCollisionStream(LBMFields d) {
                                                 (CIZ[Q] - uz_val) * ffz_val ) * inv_rho_cssq;
         const float fneq_reg = gpu_compute_non_equilibria(PXX,PYY,PZZ,PXY,PXZ,PYZ,ux_val,uy_val,uz_val,Q);
         const idx_t streamed_idx4 = gpu_idx_global4(xx,yy,zz,Q);
-        d.f[streamed_idx4] = to_dtype(feq + OMCO * fneq_reg + force_corr); 
+        d.f[streamed_idx4] = to_dtype(feq + omco_loc * fneq_reg + force_corr); 
     } //FOR_EACH_STREAM; // unrolled loop
 
     // write to global memory

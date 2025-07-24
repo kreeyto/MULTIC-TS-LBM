@@ -91,18 +91,21 @@ constexpr size_t DYNAMIC_SHARED_SIZE = 0;
     constexpr float SIGMA    = 0.1f;          // surface tension coefficient
 #endif // FLOW_CASE
 
-// general model parameters and auxiliary constants
-constexpr float CSSQ        = 1.0f / 3.0f;  // square of speed of sound
-constexpr float OMEGA       = 1.0f / TAU;   // relaxation frequency
-constexpr float OOS         = 1.0f / 6.0f;  // just One Over Six... nothing special
-constexpr float OMCO        = 1.0f - OMEGA; // complementary of omega
-constexpr float CSCO        = 1.0f - CSSQ;  // complementary of cssq
-
 // sponge parameters
-constexpr float K         = 50.0f;                                      // gain factor 
-constexpr float P         = 3.0f;                                       // transition degree (polynomial)
-constexpr float SPONGE    = 50.0f / 600.0f;                             // thickness
-constexpr float Z_START   = 1.0f - SPONGE;                              // start of the ramp region
+constexpr float K    = 1000.0f; // gain factor 
+constexpr float P    = 3.0f;    // transition degree (polynomial)
+constexpr int CELLS  = 20;      // width    
+
+// general model parameters and auxiliary constants
+constexpr float CSSQ      = 1.0f / 3.0f;  // square of speed of sound
+constexpr float OMEGA     = 1.0f / TAU;   // relaxation frequency
+constexpr float OOS       = 1.0f / 6.0f;  // one over six
+constexpr float OMCO      = 1.0f - OMEGA; // complementary of omega
+constexpr float CSCO      = 1.0f - CSSQ;  // complementary of cssq
+
+// sponge related auxiliary constants
+constexpr float SPONGE    = float(CELLS) / float(NZ-1);                 // sponge width in normalized coordinates
+constexpr float Z_START   = float(NZ-1-CELLS) / float(NZ-1);            // z coordinate where the sponge starts
 constexpr float OMEGA_MAX = 1.0f / ((VISC * (K + 1.0f)) / CSSQ + 0.5f); // omega at z=max
 constexpr float OMCO_MAX  = 1.0f - OMEGA_MAX;                           // complementary of omega at z=max
 

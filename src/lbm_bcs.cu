@@ -21,7 +21,7 @@ __global__ void gpuApplyInflow(LBMFields d, const int STEP) {
     const float phi_in = 1.0f;
     const float uz_in = 
     #ifdef PERTURBATION
-        /* apply perturbation */ U_JET * (1.0f + DATAZ[STEP/MACRO_SAVE] * 10.0f);
+        /* apply perturbation */ U_JET * (1.0f + DATAZ[(STEP/MACRO_SAVE)%200] * 10.0f);
     #else
         /* straightforward */ U_JET;
     #endif 
@@ -262,9 +262,11 @@ __global__ void gpuApplyPeriodic(LBMFields d) {
 
     d.g[gpu_idx_global4(1,y,z,1)] = d.g[gpu_idx_global4(NX-2,y,z,1)];
     d.g[gpu_idx_global4(NX-2,y,z,2)] = d.g[gpu_idx_global4(1,y,z,2)];
+
     d.g[gpu_idx_global4(x,1,z,3)] = d.g[gpu_idx_global4(x,NY-2,z,3)];
     d.g[gpu_idx_global4(x,NY-2,z,4)] = d.g[gpu_idx_global4(x,1,z,4)];
 
+    // ghost cell periodicity
     d.phi[gpu_idx_global3(0,y,z)] = d.phi[gpu_idx_global3(NX-2,y,z)];
     d.phi[gpu_idx_global3(NX-1,y,z)] = d.phi[gpu_idx_global3(1,y,z)];
     d.phi[gpu_idx_global3(x,0,z)] = d.phi[gpu_idx_global3(x,NY-2,z)];

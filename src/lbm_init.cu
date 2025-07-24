@@ -56,34 +56,4 @@ __global__ void gpuInitDistributions(LBMFields d) {
     }
 } 
 
-__global__ void gpuInitInflowRegion(LBMFields d) {
-    const int x = threadIdx.x + blockIdx.x * blockDim.x;
-    const int y = threadIdx.y + blockIdx.y * blockDim.y;
-    const int z = 0; 
-
-    if (x >= NX || y >= NY) return;
-
-    const float center_x = (NX-1) * 0.5f;
-    const float center_y = (NY-1) * 0.5f;
-
-    const float dx = x-center_x, dy = y-center_y;
-    const float radial_dist = sqrtf(dx*dx + dy*dy);
-    const float radius = 0.5f * DIAM;
-
-    if (radial_dist > radius) return;
-
-    const idx_t idx3 = gpu_idx_global3(x,y,z);
-    
-    const float rho_val = 1.0f;
-    const float phi_val = 1.0f;
-    const float uz_val = U_JET;
-
-    d.rho[idx3] = rho_val;
-    d.phi[idx3] = phi_val;
-    d.ux[idx3] = 0.0f;
-    d.uy[idx3] = 0.0f;
-    d.uz[idx3] = uz_val;
-}
-
-
 

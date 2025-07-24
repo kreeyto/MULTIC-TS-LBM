@@ -8,7 +8,6 @@
 __global__ void gpuInitDropletShape(LBMFields d);  // initialize the droplet shape for the droplet case    //
 __global__ void gpuInitFields(LBMFields d);        // initialize fields                                    //
 __global__ void gpuInitDistributions(LBMFields d); // initialize distributions                             //
-__global__ void gpuInitInflowRegion(LBMFields d);  // initialize inflow region for inflow BCs              //
 // ======================================================================================================= //
 //                                      PHASE FIELD CALCULATIONS                                           //
 // ======================================================================================================= //

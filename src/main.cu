@@ -38,7 +38,7 @@ int main(int argc, char* argv[]) {
 
     auto START_TIME = std::chrono::high_resolution_clock::now();
     for (int STEP = 0; STEP <= NSTEPS ; ++STEP) {
-        std::cout << "Passo " << STEP << " de " << NSTEPS << " iniciado..." << std::endl;
+        std::cout << "Step " << STEP << " of " << NSTEPS << " started..." << std::endl;
 
         // ========================= GRADIENTS & FORCES ========================= //
 
@@ -87,12 +87,13 @@ int main(int argc, char* argv[]) {
 
         if (STEP % MACRO_SAVE == 0) {
 
+            copyAndSaveToBinary(lbm.rho,NX*NY*NZ,SIM_DIR,SIM_ID,STEP,"rho");
             copyAndSaveToBinary(lbm.phi,NX*NY*NZ,SIM_DIR,SIM_ID,STEP,"phi");
             copyAndSaveToBinary(lbm.uz,NX*NY*NZ,SIM_DIR,SIM_ID,STEP,"uz");
             //copyAndSaveToBinary(dfields.vorticity_mag,NX*NY*NZ,SIM_DIR,SIM_ID,STEP,"vorticity_mag");
             //copyAndSaveToBinary(dfields.q_criterion,NX*NY*NZ,SIM_DIR,SIM_ID,STEP,"q_criterion");
 
-            std::cout << "Passo " << STEP << ": Dados salvos em " << SIM_DIR << std::endl;
+            std::cout << "Step " << STEP << ": Binaries saved in " << SIM_DIR << std::endl;
         }
     }
     auto END_TIME = std::chrono::high_resolution_clock::now();

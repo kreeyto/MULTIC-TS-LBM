@@ -26,6 +26,11 @@ __global__ void gpuPhi(LBMFields d) {
     d.phi[idx3] = phi_val;
 }
 
+//#elif defined(D3Q27) //      0  1  2  3  4  5  6  7  8  9  10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26
+//    const ci_t H_CIX[27] = { 0, 1,-1, 0, 0, 0, 0, 1,-1, 1,-1, 0, 0, 1,-1, 1,-1, 0, 0, 1,-1, 1,-1, 1,-1,-1, 1 };
+//    const ci_t H_CIY[27] = { 0, 0, 0, 1,-1, 0, 0, 1,-1, 0, 0, 1,-1,-1, 1, 0, 0, 1,-1, 1,-1, 1,-1,-1, 1, 1,-1 };
+//    const ci_t H_CIZ[27] = { 0, 0, 0, 0, 0, 1,-1, 0, 0, 1,-1, 1,-1, 0, 0,-1, 1,-1, 1, 1,-1,-1, 1, 1,-1, 1,-1 };
+
 __global__ void gpuGradients(LBMFields d) {
     const int x = threadIdx.x + blockIdx.x * blockDim.x;
     const int y = threadIdx.y + blockIdx.y * blockDim.y;
@@ -76,18 +81,15 @@ __global__ void gpuGradients(LBMFields d) {
     const float grad_phi_y = 3.0f * w_sum_grad_y;
     const float grad_phi_z = 3.0f * w_sum_grad_z;
     
-    const float phi_val = d.phi[idx3];
     const float grad2 = grad_phi_x*grad_phi_x + grad_phi_y*grad_phi_y + grad_phi_z*grad_phi_z;
     const float mag = rsqrtf(grad2 + 1e-9f);
     const float normx_val = grad_phi_x * mag;
     const float normy_val = grad_phi_y * mag;
     const float normz_val = grad_phi_z * mag;
-    const float ind_val = phi_val * (1.0f - phi_val) * (normx_val*normx_val + normy_val*normy_val + normz_val*normz_val);
 
     d.normx[idx3] = normx_val;
     d.normy[idx3] = normy_val;
     d.normz[idx3] = normz_val;
-    d.ind[idx3] = ind_val;
 }
 
 __global__ void gpuForces(LBMFields d) {
@@ -102,10 +104,11 @@ __global__ void gpuForces(LBMFields d) {
 
     const idx_t idx3 = gpu_idx_global3(x,y,z);
 
-    const float ind_val = d.ind[idx3];
+    const float phi_val = d.phi[idx3];
     const float normx_val = d.normx[idx3];
     const float normy_val = d.normy[idx3];
     const float normz_val = d.normz[idx3];
+    const float ind_val = phi_val * (1.0f - phi_val) * (normx_val*normx_val + normy_val*normy_val + normz_val*normz_val);
 
     float curvature = 0.0f;
     if (ind_val > 0.2f) {
@@ -146,9 +149,9 @@ __global__ void gpuForces(LBMFields d) {
     }
 
     const float coeff_force = SIGMA * curvature;
-    d.ffx[idx3] = coeff_force * normx_val * ind_val;
-    d.ffy[idx3] = coeff_force * normy_val * ind_val;
-    d.ffz[idx3] = coeff_force * normz_val * ind_val;
+    d.ffx[idx3] = coeff_force * normx_val;
+    d.ffy[idx3] = coeff_force * normy_val;
+    d.ffz[idx3] = coeff_force * normz_val;
 }
 
 __global__ void gpuEvolvePhaseField(LBMFields d) {
@@ -191,7 +194,7 @@ __global__ void gpuEvolvePhaseField(LBMFields d) {
     anti_diff = phi_norm * normy_val;
     d.g[gpu_idx_global4(x,y+1,z,3)] = geq + anti_diff;
 
-    geq = mult_phi- a3 * uy_val;
+    geq = mult_phi - a3 * uy_val;
     d.g[gpu_idx_global4(x,y-1,z,4)] = geq - anti_diff;
 
     geq = mult_phi + a3 * uz_val;

@@ -13,7 +13,7 @@
 
 #ifdef RUN_MODE
     constexpr int MACRO_SAVE = 100;
-    constexpr int NSTEPS = 30000;
+    constexpr int NSTEPS = 10000;
 #elif defined(SAMPLE_MODE)
     constexpr int MACRO_SAVE = 100;
     constexpr int NSTEPS = 1000;
@@ -24,7 +24,7 @@
 
 #ifdef JET_CASE
     // domain size
-    constexpr int MESH = 200;
+    constexpr int MESH = 128;
     constexpr int DIAM = 20;
     constexpr int NX   = MESH;
     constexpr int NY   = MESH;

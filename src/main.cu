@@ -20,7 +20,15 @@ int main(int argc, char* argv[]) {
                    (NY + threadsPerBlock.y - 1) / threadsPerBlock.y,
                    (NZ + threadsPerBlock.z - 1) / threadsPerBlock.z);
 
-    dim3 threadsPerBlockZ(BLOCK_SIZE_X*2,BLOCK_SIZE_Y*2);  
+    dim3 threadsPerBlockX(BLOCK_SIZE_X*4,BLOCK_SIZE_Y*4);
+    dim3 numBlocksX((NY + threadsPerBlockX.x - 1) / threadsPerBlockX.x, 
+                    (NZ + threadsPerBlockX.y - 1) / threadsPerBlockX.y);
+
+    dim3 threadsPerBlockY(BLOCK_SIZE_X*4,BLOCK_SIZE_Y*4);
+    dim3 numBlocksY((NX + threadsPerBlockY.x - 1) / threadsPerBlockY.x, 
+                    (NZ + threadsPerBlockY.y - 1) / threadsPerBlockY.y);                
+                   
+    dim3 threadsPerBlockZ(BLOCK_SIZE_X*4,BLOCK_SIZE_Y*4);  
     dim3 numBlocksZ((NX + threadsPerBlockZ.x - 1) / threadsPerBlockZ.x,
                     (NY + threadsPerBlockZ.y - 1) / threadsPerBlockZ.y);
                     
@@ -40,19 +48,19 @@ int main(int argc, char* argv[]) {
     for (int STEP = 0; STEP <= NSTEPS ; ++STEP) {
         std::cout << "Step " << STEP << " of " << NSTEPS << " started..." << std::endl;
 
-        // ========================= GRADIENTS & FORCES ========================= //
+        // ========================= NORMALS & FORCES ========================= //
 
             gpuPhi<<<numBlocks,threadsPerBlock,DYNAMIC_SHARED_SIZE,mainStream>>> (lbm);
             getLastCudaError("gpuPhi");
-            gpuGradients<<<numBlocks,threadsPerBlock,DYNAMIC_SHARED_SIZE,mainStream>>> (lbm); 
+            gpuNormals<<<numBlocks,threadsPerBlock,DYNAMIC_SHARED_SIZE,mainStream>>> (lbm); 
             getLastCudaError("gpuGradients");
             gpuForces<<<numBlocks,threadsPerBlock,DYNAMIC_SHARED_SIZE,mainStream>>> (lbm); 
             getLastCudaError("gpuForces");
         
-        // ====================================================================== //
+        // ==================================================================== //
         
         // ========================= COLLISION & STREAMING ========================= //
-        
+
             gpuCollisionStream<<<numBlocks,threadsPerBlock,DYNAMIC_SHARED_SIZE,mainStream>>> (lbm); 
             getLastCudaError("gpuCollisionStream");
             gpuEvolvePhaseField<<<numBlocks,threadsPerBlock,DYNAMIC_SHARED_SIZE,mainStream>>> (lbm); 
@@ -67,8 +75,12 @@ int main(int argc, char* argv[]) {
                 getLastCudaError("gpuApplyInflow");
                 gpuApplyOutflow<<<numBlocksZ,threadsPerBlockZ,DYNAMIC_SHARED_SIZE,mainStream>>> (lbm);
                 getLastCudaError("gpuApplyOutflow");
-                gpuApplyPeriodic<<<numBlocks,threadsPerBlock,DYNAMIC_SHARED_SIZE,mainStream>>> (lbm);
-                getLastCudaError("gpuApplyPeriodic");
+                gpuApplyPeriodicX<<<numBlocksX,threadsPerBlockX,DYNAMIC_SHARED_SIZE,mainStream>>> (lbm);
+                getLastCudaError("gpuApplyPeriodicX");
+                gpuApplyPeriodicY<<<numBlocksY,threadsPerBlockY,DYNAMIC_SHARED_SIZE,mainStream>>> (lbm);
+                getLastCudaError("gpuApplyPeriodicY");
+                //gpuApplyPeriodic<<<numBlocks,threadsPerBlock,DYNAMIC_SHARED_SIZE,mainStream>>> (lbm);
+                //getLastCudaError("gpuApplyPeriodic");
             #elif defined(DROPLET_CASE)
                 gpuReconstructBoundaries<<<numBlocks,threadsPerBlock,DYNAMIC_SHARED_SIZE,mainStream>>> (lbm); 
                 getLastCudaError("gpuReconstructBoundaries");

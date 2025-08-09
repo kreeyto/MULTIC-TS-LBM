@@ -1,16 +1,29 @@
 #pragma once
 #include "constants.cuh"
 
-#define SECOND_ORDER 
+#define OPTIM_FMA
 
 __device__ __forceinline__ idx_t gpu_idx_global3(const int x, const int y, const int z) {
     return x + y * NX + z * NX * NY;
 }
 
-__device__ __forceinline__ idx_t gpu_idx_global4(const int x, const int y, const int z, const int Q) {
+__device__ __forceinline__ idx_t gpu_f_idx_global4(const int x, const int y, const int z, const int Q) {
     int stride = NX * NY;
     return x + y * NX + z * stride + Q * stride * NZ;
 }
+
+__device__ __forceinline__ idx_t gpu_g_idx_global4(const int x, const int y, const int z, const int Q) {
+    int stride = NX * NY;
+    return x + y * NX + z * stride + Q * stride * NZ;
+}
+
+// soa data structure indexing
+/* __device__ __forceinline__ idx_t gpu_f_idx_global4(const int x, const int y, const int z, const int Q) {
+    return Q + FLINKS * (x + NX * (y + NY * z));
+}
+__device__ __forceinline__ idx_t gpu_g_idx_global4(const int x, const int y, const int z, const int Q) {
+    return Q + GLINKS * (x + NX * (y + NY * z));
+} */
 
 __device__ __forceinline__ idx_t gpu_idx_shared3(const int tx, const int ty, const int tz) {
     return tx + ty * TILE_X + tz * TILE_X * TILE_Y;
@@ -22,29 +35,29 @@ __device__ __forceinline__ float gpu_smoothstep(float edge0, float edge1, float 
 }
 
 __device__ __forceinline__ float gpu_compute_truncated_equilibria(const float density, const float ux, const float uy, const float uz, const int Q) {
-    float cu = 3.0f * (ux*CIX[Q] + uy*CIY[Q] + uz*CIZ[Q]);
+    const float cu = 3.0f * (ux*CIX[Q] + uy*CIY[Q] + uz*CIZ[Q]);
     return W_G[Q] * density * (1.0f + cu);
-}
-
-__device__ __forceinline__ float gpu_compute_equilibria(const float density, const float ux, const float uy, const float uz, const int Q) {
-    #ifdef D3Q19
-        float uu = 1.5f * (ux*ux + uy*uy + uz*uz);
-        float cu = 3.0f * (ux*CIX[Q] + uy*CIY[Q] + uz*CIZ[Q]);
-        float eqbase = density * (cu + 0.5f * cu*cu - uu);
-        return W[Q] * (density + eqbase) - W[Q];
-    #elif defined(D3Q27)
-        float uu = 1.5f * (ux*ux + uy*uy + uz*uz);
-        float cu = 3.0f * (ux*CIX[Q] + uy*CIY[Q] + uz*CIZ[Q]);
-        float eqbase = density * (cu + 0.5f*cu*cu - uu + OOS*cu*cu*cu - cu*uu);
-        return W[Q] * (density + eqbase) - W[Q];
-    #endif
 }
 
 __device__ __forceinline__ float gpu_local_omega(int z) {
     float zn = float(z) / float(NZ-1);
     float s = (zn > Z_START) ? (zn - Z_START) / SPONGE : 0.0f;
-    float ramp = powf(s,P < 0 ? 1.0f : P);  
+    float ramp = powf(s,P < 0.0f ? 1.0f : P);  
     return OMEGA * (1.0f - ramp) + OMEGA_MAX * ramp;                    
+}
+
+__device__ __forceinline__ float gpu_compute_equilibria(const float density, const float ux, const float uy, const float uz, const int Q) {
+    #ifdef D3Q19
+        const float uu = 1.5f * (ux*ux + uy*uy + uz*uz);
+        const float cu = 3.0f * (ux*CIX[Q] + uy*CIY[Q] + uz*CIZ[Q]);
+        const float eqbase = density * (cu + 0.5f * cu*cu - uu);
+        return W[Q] * (density + eqbase) - W[Q];
+    #elif defined(D3Q27)
+        const float uu = 1.5f * (ux*ux + uy*uy + uz*uz);
+        const float cu = 3.0f * (ux*CIX[Q] + uy*CIY[Q] + uz*CIZ[Q]);
+        const float eqbase = density * (cu + 0.5f*cu*cu - uu + OOS*cu*cu*cu - cu*uu);
+        return W[Q] * (density + eqbase) - W[Q];
+    #endif
 }
 
 __device__ __forceinline__ float gpu_compute_non_equilibria(const float PXX, const float PYY, const float PZZ, const float PXY, const float PXZ, const float PYZ,  const float ux, const float uy, const float uz, const int Q) {
@@ -57,11 +70,11 @@ __device__ __forceinline__ float gpu_compute_non_equilibria(const float PXX, con
                                 2.0f * CIY[Q] * CIZ[Q] * PYZ);
     #elif defined(D3Q27)
         const float fneq2 = (W[Q] * 4.5f) * ((CIX[Q]*CIX[Q] - CSSQ) * PXX + 
-                                             (CIY[Q]*CIY[Q] - CSSQ) * PYY + 
-                                             (CIZ[Q]*CIZ[Q] - CSSQ) * PZZ + 
-                                             2.0f * CIX[Q] * CIY[Q] * PXY + 
-                                             2.0f * CIX[Q] * CIZ[Q] * PXZ +
-                                             2.0f * CIY[Q] * CIZ[Q] * PYZ);
+                                            (CIY[Q]*CIY[Q] - CSSQ) * PYY + 
+                                            (CIZ[Q]*CIZ[Q] - CSSQ) * PZZ + 
+                                            2.0f * CIX[Q] * CIY[Q] * PXY + 
+                                            2.0f * CIX[Q] * CIZ[Q] * PXZ +
+                                            2.0f * CIY[Q] * CIZ[Q] * PYZ);
 
         float a3_xxx = 3.0f * ux * PXX;
         float a3_yyy = 3.0f * uy * PYY;
@@ -106,3 +119,28 @@ __device__ __forceinline__ float gpu_compute_non_equilibria(const float PXX, con
     #endif // D3Q27 
 }
 
+__device__ __forceinline__ float gpu_compute_force_term(const float coeff, const float feq, const float ux, const float uy, const float uz, const float ffx, const float ffy, const float ffz, const float aux, const int Q) {
+    #ifdef D3Q19
+        return coeff * feq * ((CIX[Q] - ux) * ffx +
+                              (CIY[Q] - uy) * ffy +
+                              (CIZ[Q] - uz) * ffz) * aux;
+    #elif defined(D3Q27)
+        const float cu = 3.0f * (ux*CIX[Q] + uy*CIY[Q] + uz*CIZ[Q]);
+        return coeff * W[Q] * ((3.0f * (CIX[Q] - ux) + 3.0f * cu * CIX[Q] ) * ffx +
+                               (3.0f * (CIY[Q] - uy) + 3.0f * cu * CIY[Q] ) * ffy +
+                               (3.0f * (CIZ[Q] - uz) + 3.0f * cu * CIZ[Q] ) * ffz);
+    #endif // D3Q27 
+}
+
+template<typename T, int N>
+__device__ __forceinline__
+void copy_dirs_stride(T* __restrict__ arr,
+                      idx_t site_dst, idx_t site_src,
+                      const int (&qs)[N])
+{
+    #pragma unroll
+    for (int i = 0; i < N; ++i) {
+        const int q = qs[i];
+        arr[q * plane + site_dst] = arr[q * plane + site_src];
+    }
+}

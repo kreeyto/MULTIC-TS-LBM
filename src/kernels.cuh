@@ -11,9 +11,9 @@ __global__ void gpuInitDistributions(LBMFields d); // initialize distributions  
 // ======================================================================================================= //
 //                                      PHASE FIELD CALCULATIONS                                           //
 // ======================================================================================================= //
-__global__ void gpuPhi(LBMFields d);       // order variable summation                                     //
-__global__ void gpuGradients(LBMFields d); // gradients, normals, curvature                                //
-__global__ void gpuForces(LBMFields d);    // forces, curvature, phase field                               //
+__global__ void gpuPhi(LBMFields d);     // computation of phi                                             //
+__global__ void gpuNormals(LBMFields d); // gradients, normals                                             //
+__global__ void gpuForces(LBMFields d);  // forces, curvature                                              //
 // ======================================================================================================= //
 //                                       FLUID FIELD EVOLUTION                                             //
 // ======================================================================================================= //
@@ -24,7 +24,8 @@ __global__ void gpuEvolvePhaseField(LBMFields d); // advection-diffusion of the 
 // ======================================================================================================= //
 __global__ void gpuApplyInflow(LBMFields d, const int STEP); // inflow at z=0                              //
 __global__ void gpuApplyOutflow(LBMFields d);                // neumann at z=nz-1                          //
-__global__ void gpuApplyPeriodic(LBMFields d);               // periodic at x-y                            //
+__global__ void gpuApplyPeriodicX(LBMFields d);                                                            //
+__global__ void gpuApplyPeriodicY(LBMFields d);                                                            //
 // ======================================================================================================= //
 //                                          DERIVED FIELDS                                                 //
 // ======================================================================================================= //

@@ -48,11 +48,11 @@ __global__ void gpuInitDistributions(LBMFields d) {
 
     #pragma unroll FLINKS
     for (int Q = 0; Q < FLINKS; ++Q) {
-        d.f[gpu_idx_global4(x,y,z,Q)] = gpu_compute_equilibria(d.rho[idx3],d.ux[idx3],d.uy[idx3],d.uz[idx3],Q);
+        d.f[gpu_f_idx_global4(x,y,z,Q)] = gpu_compute_equilibria(d.rho[idx3],d.ux[idx3],d.uy[idx3],d.uz[idx3],Q);
     }
     #pragma unroll GLINKS
     for (int Q = 0; Q < GLINKS; ++Q) {
-        d.g[gpu_idx_global4(x,y,z,Q)] = gpu_compute_truncated_equilibria(d.phi[idx3],d.ux[idx3],d.uy[idx3],d.uz[idx3],Q);
+        d.g[gpu_g_idx_global4(x,y,z,Q)] = gpu_compute_truncated_equilibria(d.phi[idx3],d.ux[idx3],d.uy[idx3],d.uz[idx3],Q);
     }
 } 
 

@@ -16,7 +16,7 @@ DerivedFields dfields;
 
 void initDeviceVars() {
     size_t SIZE =        NX * NY * NZ          * sizeof(float);            
-    size_t F_DIST_SIZE = NX * NY * NZ * FLINKS * sizeof(dtype_t); 
+    size_t F_DIST_SIZE = NX * NY * NZ * FLINKS * sizeof(dtype_t);
     size_t G_DIST_SIZE = NX * NY * NZ * GLINKS * sizeof(float); 
 
     checkCudaErrors(cudaMalloc(&lbm.rho,   SIZE));

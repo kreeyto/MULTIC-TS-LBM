@@ -34,13 +34,12 @@ nvcc -O3 --restrict \
      -gencode arch=compute_${CC},code=sm_${CC} \
      -rdc=true --ptxas-options=-v -use_fast_math \
      -I"${SRC_DIR}" \
-     "${SRC_DIR}/main.cu" \
-     "${SRC_DIR}/lbm_init.cu" \
-     "${SRC_DIR}/lbm_phase.cu" \
-     "${SRC_DIR}/lbm.cu" \
-     "${SRC_DIR}/lbm_bcs.cu" \
-     "${SRC_DIR}/lbm_dfields.cu" \
      "${SRC_DIR}/device_setup.cu" \
+     "${SRC_DIR}/initial_conditions.cu" \
+     "${SRC_DIR}/lbm.cu" \
+     "${SRC_DIR}/boundary_conditions.cu" \
+     "${SRC_DIR}/derived_fields.cu" \
+     "${SRC_DIR}/main.cu" \
      -maxrregcount=${MAXRREG} -D${VELOCITY_SET} \
      -o "${EXECUTABLE}"
 

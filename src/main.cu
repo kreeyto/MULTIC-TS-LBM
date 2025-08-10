@@ -79,8 +79,6 @@ int main(int argc, char* argv[]) {
                 getLastCudaError("gpuApplyPeriodicX");
                 gpuApplyPeriodicY<<<numBlocksY,threadsPerBlockY,DYNAMIC_SHARED_SIZE,mainStream>>> (lbm);
                 getLastCudaError("gpuApplyPeriodicY");
-                //gpuApplyPeriodic<<<numBlocks,threadsPerBlock,DYNAMIC_SHARED_SIZE,mainStream>>> (lbm);
-                //getLastCudaError("gpuApplyPeriodic");
             #elif defined(DROPLET_CASE)
                 gpuReconstructBoundaries<<<numBlocks,threadsPerBlock,DYNAMIC_SHARED_SIZE,mainStream>>> (lbm); 
                 getLastCudaError("gpuReconstructBoundaries");

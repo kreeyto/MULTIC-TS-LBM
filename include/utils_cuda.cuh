@@ -40,9 +40,9 @@ constexpr size_t DYNAMIC_SHARED_SIZE = 0;
 #endif // FP16_COMPRESSION
 
 typedef int ci_t;
-typedef int idx_t;
+typedef uint32_t idx_t;
 
-#define checkCudaErrors(err)       __checkCudaErrors(err, #err, __FILE__, __LINE__)
+#define checkCudaErrors(err)      __checkCudaErrors(err, #err, __FILE__, __LINE__)
 #define getLastCudaError(msg)     __getLastCudaError(msg, __FILE__, __LINE__)
 
 inline void __checkCudaErrors(cudaError_t err, const char* const func, const char* const file, const int line) {

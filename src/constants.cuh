@@ -8,12 +8,12 @@
 //#define DROPLET_CASE
 
 //#define RUN_MODE
-//#define SAMPLE_MODE
-#define DEBUG_MODE
+#define SAMPLE_MODE
+//#define DEBUG_MODE
 
 #ifdef RUN_MODE
     constexpr int MACRO_SAVE = 100;
-    constexpr int NSTEPS = 30000;
+    constexpr int NSTEPS = 10000;
 #elif defined(SAMPLE_MODE)
     constexpr int MACRO_SAVE = 100;
     constexpr int NSTEPS = 1000;
@@ -24,7 +24,7 @@
 
 #ifdef JET_CASE
     // domain size
-    constexpr int MESH = 128;
+    constexpr int MESH = 64;
     constexpr int DIAM = 10;
     constexpr int NX   = MESH;
     constexpr int NY   = MESH;
@@ -60,16 +60,18 @@ constexpr float P   = 3.0f;       // transition degree (polynomial)
 constexpr int CELLS = int(NZ/12); // width    
 
 // general model parameters and auxiliary constants
-constexpr float CSSQ  = 1.0f / 3.0f;  // square of speed of sound
-constexpr float OMEGA = 1.0f / TAU;   // relaxation frequency
-constexpr float OOS   = 1.0f / 6.0f;  // one over six
-constexpr float OMCO  = 1.0f - OMEGA; // complementary of omega
-constexpr float CSCO  = 1.0f - CSSQ;  // complementary of cssq
-constexpr idx_t plane = (idx_t)NX * NY * NZ;
+constexpr float CSSQ   = 1.0f / 3.0f;  // square of speed of sound
+constexpr float OMEGA  = 1.0f / TAU;   // relaxation frequency
+constexpr float OOS    = 1.0f / 6.0f;  // one over six
+constexpr float OMCO   = 1.0f - OMEGA; // complementary of omega
+constexpr float CSCO   = 1.0f - CSSQ;  // complementary of cssq
+constexpr idx_t PLANE  = (idx_t)NX * NY * NZ;
+constexpr idx_t STRIDE = (idx_t)NX * NY;
 
 // sponge related auxiliary constants
 constexpr float SPONGE    = float(CELLS) / float(NZ-1);                 // sponge width in normalized coordinates
 constexpr float Z_START   = float(NZ-1-CELLS) / float(NZ-1);            // z coordinate where the sponge starts
 constexpr float OMEGA_MAX = 1.0f / ((VISC * (K + 1.0f)) / CSSQ + 0.5f); // omega at z=max
 constexpr float OMCO_MAX  = 1.0f - OMEGA_MAX;                           // complementary of omega at z=max
+
  

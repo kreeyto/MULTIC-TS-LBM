@@ -10,7 +10,9 @@ __constant__ ci_t CIX[FLINKS], CIY[FLINKS], CIZ[FLINKS];
 #endif
 
 LBMFields lbm;
+#ifdef D_FIELDS
 DerivedFields dfields;
+#endif // D_FIELDS
                                          
 // =============================================================================================================================================================== //
 
@@ -42,8 +44,10 @@ void initDeviceVars() {
     checkCudaErrors(cudaMalloc(&lbm.f,     F_DIST_SIZE));
     checkCudaErrors(cudaMalloc(&lbm.g,     G_DIST_SIZE));
 
+    #ifdef D_FIELDS
     checkCudaErrors(cudaMalloc(&dfields.vorticity_mag, SIZE));
     checkCudaErrors(cudaMalloc(&dfields.q_criterion,   SIZE));
+    #endif // D_FIELDS
 
     checkCudaErrors(cudaMemset(lbm.pxx,   0, SIZE));
     checkCudaErrors(cudaMemset(lbm.pyy,   0, SIZE));

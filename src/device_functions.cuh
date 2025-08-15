@@ -93,5 +93,5 @@ __device__ __forceinline__ float gpu_compute_force_term(const float coeff, const
 template<typename T, int... Qs>
 __device__ __forceinline__
 void copy_dirs(T* __restrict__ arr, idx_t dst, idx_t src) {
-    ((arr[Qs*PLANE + dst] = arr[Qs*PLANE + src]), ...);
+    ((arr[Qs*PLANE+dst] = arr[Qs*PLANE+src]), ...);
 }

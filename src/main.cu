@@ -86,12 +86,10 @@ int main(int argc, char* argv[]) {
 
         // ================================================================================== //
 
-        // =================================== DERIVED FIELDS =================================== //
-
-            //gpuDerivedFields<<<numBlocks,threadsPerBlock,DYNAMIC_SHARED_SIZE,mainStream>>> (lbm,dfields); 
-            //getLastCudaError("gpuDerivedFields");
-
-        // ====================================================================================== //
+        #ifdef D_FIELDS
+        gpuDerivedFields<<<numBlocks,threadsPerBlock,DYNAMIC_SHARED_SIZE,mainStream>>> (lbm,dfields); 
+        getLastCudaError("gpuDerivedFields");
+        #endif // D_FIELDS
 
         checkCudaErrors(cudaDeviceSynchronize());
 
@@ -100,8 +98,10 @@ int main(int argc, char* argv[]) {
             copyAndSaveToBinary(lbm.rho,NX*NY*NZ,SIM_DIR,SIM_ID,STEP,"rho");
             copyAndSaveToBinary(lbm.phi,NX*NY*NZ,SIM_DIR,SIM_ID,STEP,"phi");
             copyAndSaveToBinary(lbm.uz,NX*NY*NZ,SIM_DIR,SIM_ID,STEP,"uz");
-            //copyAndSaveToBinary(dfields.vorticity_mag,NX*NY*NZ,SIM_DIR,SIM_ID,STEP,"vorticity_mag");
-            //copyAndSaveToBinary(dfields.q_criterion,NX*NY*NZ,SIM_DIR,SIM_ID,STEP,"q_criterion");
+            #ifdef D_FIELDS
+            copyAndSaveToBinary(dfields.vorticity_mag,NX*NY*NZ,SIM_DIR,SIM_ID,STEP,"vorticity_mag");
+            copyAndSaveToBinary(dfields.q_criterion,NX*NY*NZ,SIM_DIR,SIM_ID,STEP,"q_criterion");
+            #endif // D_FIELDS
 
             std::cout << "Step " << STEP << ": Binaries saved in " << SIM_DIR << std::endl;
         }
@@ -132,9 +132,10 @@ int main(int argc, char* argv[]) {
     cudaFree(lbm.ffy); 
     cudaFree(lbm.ffz);
 
-    // derivedfields
+    #ifdef D_FIELDS
     cudaFree(dfields.vorticity_mag);
     cudaFree(dfields.q_criterion);
+    #endif // D_FIELDS
 
     std::chrono::duration<double> ELAPSED_TIME = END_TIME - START_TIME;
     long long TOTAL_CELLS = static_cast<long long>(NX) * NY * NZ * NSTEPS;

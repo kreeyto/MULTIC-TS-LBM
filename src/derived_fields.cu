@@ -1,5 +1,6 @@
 #include "kernels.cuh"
 
+#ifdef D_FIELDS
 __global__ void gpuDerivedFields(LBMFields lbm, DerivedFields dfields) {
     const int x = threadIdx.x + blockIdx.x * blockDim.x;
     const int y = threadIdx.y + blockIdx.y * blockDim.y;
@@ -52,3 +53,4 @@ __global__ void gpuDerivedFields(LBMFields lbm, DerivedFields dfields) {
     dfields.q_criterion[idx] = Q;
     // good q values float around 0.000005
 }
+#endif // D_FIELDS

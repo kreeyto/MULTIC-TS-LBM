@@ -18,13 +18,14 @@ struct LBMFields {
     float *ffx, *ffy, *ffz;
     dtype_t *f; float *g; 
 };
+extern LBMFields lbm;
 
+#ifdef D_FIELDS
 struct DerivedFields {
     float *vorticity_mag;
     float *q_criterion;
 };
-
-extern LBMFields lbm;
+#endif // D_FIELDS
 extern DerivedFields dfields;
 
 void initDeviceVars();

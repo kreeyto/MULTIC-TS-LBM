@@ -26,15 +26,14 @@ __global__ void gpuApplyInflow(LBMFields d, const int STEP) {
         /* straightforward */ U_JET;
     #endif 
 
-    const float rho_val = 1.0f;
-    d.rho[idx3_in] = rho_val; 
     d.phi[idx3_in] = phi_in;
     d.ux[idx3_in] = 0.0f;
     d.uy[idx3_in] = 0.0f;
     d.uz[idx3_in] = uz_in;
 
     int neighbor_idx = gpu_idx_global3(x,y,z+1);
-    float feq = gpu_compute_equilibria(rho_val,0.0f,0.0f,uz_in,5);
+    d.rho[idx3_in] = d.rho[neighbor_idx]; 
+    float feq = gpu_compute_equilibria(d.rho[neighbor_idx],0.0f,0.0f,uz_in,5);
     float fneq_reg = gpu_compute_non_equilibria(d.pxx[neighbor_idx],d.pyy[neighbor_idx],d.pzz[neighbor_idx],
                                                 d.pxy[neighbor_idx],d.pxz[neighbor_idx],d.pyz[neighbor_idx],
                                                 d.ux[neighbor_idx],d.uy[neighbor_idx],d.uz[neighbor_idx],5);
@@ -44,28 +43,28 @@ __global__ void gpuApplyInflow(LBMFields d, const int STEP) {
     d.g[gpu_idx_global4(x,y,z+1,5)] = feq;
 
     neighbor_idx = gpu_idx_global3(x+1,y,z+1);
-    feq = gpu_compute_equilibria(rho_val,0.0f,0.0f,uz_in,9);
+    feq = gpu_compute_equilibria(d.rho[neighbor_idx],0.0f,0.0f,uz_in,9);
     fneq_reg = gpu_compute_non_equilibria(d.pxx[neighbor_idx],d.pyy[neighbor_idx],d.pzz[neighbor_idx],
                                           d.pxy[neighbor_idx],d.pxz[neighbor_idx],d.pyz[neighbor_idx],
                                           d.ux[neighbor_idx],d.uy[neighbor_idx],d.uz[neighbor_idx],9);
     d.f[gpu_idx_global4(x+1,y,z+1,9)] = to_dtype(feq + OMCO * fneq_reg);
 
     neighbor_idx = gpu_idx_global3(x,y+1,z+1);
-    feq = gpu_compute_equilibria(rho_val,0.0f,0.0f,uz_in,11);
+    feq = gpu_compute_equilibria(d.rho[neighbor_idx],0.0f,0.0f,uz_in,11);
     fneq_reg = gpu_compute_non_equilibria(d.pxx[neighbor_idx],d.pyy[neighbor_idx],d.pzz[neighbor_idx],
                                           d.pxy[neighbor_idx],d.pxz[neighbor_idx],d.pyz[neighbor_idx],
                                           d.ux[neighbor_idx],d.uy[neighbor_idx],d.uz[neighbor_idx],11);
     d.f[gpu_idx_global4(x,y+1,z+1,11)] = to_dtype(feq + OMCO * fneq_reg);
 
     neighbor_idx = gpu_idx_global3(x-1,y,z+1);
-    feq = gpu_compute_equilibria(rho_val,0.0f,0.0f,uz_in,16);
+    feq = gpu_compute_equilibria(d.rho[neighbor_idx],0.0f,0.0f,uz_in,16);
     fneq_reg = gpu_compute_non_equilibria(d.pxx[neighbor_idx],d.pyy[neighbor_idx],d.pzz[neighbor_idx],
                                           d.pxy[neighbor_idx],d.pxz[neighbor_idx],d.pyz[neighbor_idx],
                                           d.ux[neighbor_idx],d.uy[neighbor_idx],d.uz[neighbor_idx],16);
     d.f[gpu_idx_global4(x-1,y,z+1,16)] = to_dtype(feq + OMCO * fneq_reg);
 
     neighbor_idx = gpu_idx_global3(x,y-1,z+1);
-    feq = gpu_compute_equilibria(rho_val,0.0f,0.0f,uz_in,18);
+    feq = gpu_compute_equilibria(d.rho[neighbor_idx],0.0f,0.0f,uz_in,18);
     fneq_reg = gpu_compute_non_equilibria(d.pxx[neighbor_idx],d.pyy[neighbor_idx],d.pzz[neighbor_idx],
                                           d.pxy[neighbor_idx],d.pxz[neighbor_idx],d.pyz[neighbor_idx],
                                           d.ux[neighbor_idx],d.uy[neighbor_idx],d.uz[neighbor_idx],18);
@@ -73,28 +72,28 @@ __global__ void gpuApplyInflow(LBMFields d, const int STEP) {
 
     #ifdef D3Q27
     neighbor_idx = gpu_idx_global3(x+1,y+1,z+1);
-    feq = gpu_compute_equilibria(rho_val,0.0f,0.0f,uz_in,19);
+    feq = gpu_compute_equilibria(d.rho[neighbor_idx],0.0f,0.0f,uz_in,19);
     fneq_reg = gpu_compute_non_equilibria(d.pxx[neighbor_idx],d.pyy[neighbor_idx],d.pzz[neighbor_idx],
                                           d.pxy[neighbor_idx],d.pxz[neighbor_idx],d.pyz[neighbor_idx],
                                           d.ux[neighbor_idx],d.uy[neighbor_idx],d.uz[neighbor_idx],19);
     d.f[gpu_idx_global4(x+1,y+1,z+1,19)] = to_dtype(feq + OMCO * fneq_reg);
 
     neighbor_idx = gpu_idx_global3(x-1,y-1,z+1);
-    feq = gpu_compute_equilibria(rho_val,0.0f,0.0f,uz_in,22);
+    feq = gpu_compute_equilibria(d.rho[neighbor_idx],0.0f,0.0f,uz_in,22);
     fneq_reg = gpu_compute_non_equilibria(d.pxx[neighbor_idx],d.pyy[neighbor_idx],d.pzz[neighbor_idx],
                                           d.pxy[neighbor_idx],d.pxz[neighbor_idx],d.pyz[neighbor_idx],
                                           d.ux[neighbor_idx],d.uy[neighbor_idx],d.uz[neighbor_idx],22);
     d.f[gpu_idx_global4(x-1,y-1,z+1,22)] = to_dtype(feq + OMCO * fneq_reg);
 
     neighbor_idx = gpu_idx_global3(x+1,y-1,z+1);
-    feq = gpu_compute_equilibria(rho_val,0.0f,0.0f,uz_in,23);
+    feq = gpu_compute_equilibria(d.rho[neighbor_idx],0.0f,0.0f,uz_in,23);
     fneq_reg = gpu_compute_non_equilibria(d.pxx[neighbor_idx],d.pyy[neighbor_idx],d.pzz[neighbor_idx],
                                           d.pxy[neighbor_idx],d.pxz[neighbor_idx],d.pyz[neighbor_idx],
                                           d.ux[neighbor_idx],d.uy[neighbor_idx],d.uz[neighbor_idx],23);
     d.f[gpu_idx_global4(x+1,y-1,z+1,23)] = to_dtype(feq + OMCO * fneq_reg);
 
     neighbor_idx = gpu_idx_global3(x-1,y+1,z+1);
-    feq = gpu_compute_equilibria(rho_val,0.0f,0.0f,uz_in,25);
+    feq = gpu_compute_equilibria(d.rho[neighbor_idx],0.0f,0.0f,uz_in,25);
     fneq_reg = gpu_compute_non_equilibria(d.pxx[neighbor_idx],d.pyy[neighbor_idx],d.pzz[neighbor_idx],
                                           d.pxy[neighbor_idx],d.pxz[neighbor_idx],d.pyz[neighbor_idx],
                                           d.ux[neighbor_idx],d.uy[neighbor_idx],d.uz[neighbor_idx],25);
@@ -195,15 +194,28 @@ __global__ void gpuApplyPeriodicX(LBMFields d) {
     const int y = threadIdx.x + blockIdx.x * blockDim.x;
     const int z = threadIdx.y + blockIdx.y * blockDim.y;
     
-    if (y <= 0 || y >= NY-1 || z <= 0 || z >= NZ-1) return;
+    //if (y <= 0 || y >= NY-1 || z <= 0 || z >= NZ-1) return;
+    if (y >= NY || z >= NZ || 
+        y == 0 || y == NY-1 || 
+        z == 0 || z == NZ-1) return;
 
     const idx_t bL = gpu_idx_global3(1,y,z);
     const idx_t bR = gpu_idx_global3(NX-2,y,z);
 
+    //#elif defined(D3Q27) //      0  1  2  3  4  5  6  7  8  9  10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26
+    //    const ci_t H_CIX[27] = { 0, 1,-1, 0, 0, 0, 0, 1,-1, 1,-1, 0, 0, 1,-1, 1,-1, 0, 0, 1,-1, 1,-1, 1,-1,-1, 1 };
+    //    const ci_t H_CIY[27] = { 0, 0, 0, 1,-1, 0, 0, 1,-1, 0, 0, 1,-1,-1, 1, 0, 0, 1,-1, 1,-1, 1,-1,-1, 1, 1,-1 };
+    //    const ci_t H_CIZ[27] = { 0, 0, 0, 0, 0, 1,-1, 0, 0, 1,-1, 1,-1, 0, 0,-1, 1,-1, 1, 1,-1,-1, 1, 1,-1, 1,-1 };
+
+    // positive x contributions
     copy_dirs<dtype_t,1,7,9,13,15>(d.f,bL,bR);   
-    copy_dirs<dtype_t,2,8,10,14,16>(d.f,bR,bL); 
     #ifdef D3Q27
     copy_dirs<dtype_t,19,21,23,26>(d.f,bL,bR);
+    #endif // D3Q27
+
+    // negative x contributions
+    copy_dirs<dtype_t,2,8,10,14,16>(d.f,bR,bL); 
+    #ifdef D3Q27
     copy_dirs<dtype_t,20,22,24,25>(d.f,bR,bL);
     #endif // D3Q27
 
@@ -217,15 +229,28 @@ __global__ void gpuApplyPeriodicY(LBMFields d) {
     const int x = threadIdx.x + blockIdx.x * blockDim.x;
     const int z = threadIdx.y + blockIdx.y * blockDim.y;
     
-    if (x <= 0 || x >= NX-1 || z <= 0 || z >= NZ-1) return;
+    //if (x <= 0 || x >= NX-1 || z <= 0 || z >= NZ-1) return;
+    if (x >= NX || z >= NZ || 
+        x == 0 || x == NX-1 || 
+        z == 0 || z == NZ-1) return;
 
     const idx_t bB = gpu_idx_global3(x,1,z);
     const idx_t bT = gpu_idx_global3(x,NY-2,z);
 
+    //#elif defined(D3Q27) //      0  1  2  3  4  5  6  7  8  9  10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26
+    //    const ci_t H_CIX[27] = { 0, 1,-1, 0, 0, 0, 0, 1,-1, 1,-1, 0, 0, 1,-1, 1,-1, 0, 0, 1,-1, 1,-1, 1,-1,-1, 1 };
+    //    const ci_t H_CIY[27] = { 0, 0, 0, 1,-1, 0, 0, 1,-1, 0, 0, 1,-1,-1, 1, 0, 0, 1,-1, 1,-1, 1,-1,-1, 1, 1,-1 };
+    //    const ci_t H_CIZ[27] = { 0, 0, 0, 0, 0, 1,-1, 0, 0, 1,-1, 1,-1, 0, 0,-1, 1,-1, 1, 1,-1,-1, 1, 1,-1, 1,-1 };
+
+    // positive y contributions
     copy_dirs<dtype_t,3,7,11,14,17>(d.f,bB,bT);
-    copy_dirs<dtype_t,4,8,12,13,18>(d.f,bT,bB);
     #ifdef D3Q27
     copy_dirs<dtype_t,19,21,24,25>(d.f,bB,bT);
+    #endif // D3Q27
+
+    // negative y contributions
+    copy_dirs<dtype_t,4,8,12,13,18>(d.f,bT,bB);
+    #ifdef D3Q27
     copy_dirs<dtype_t,20,22,23,26>(d.f,bT,bB);
     #endif // D3Q27
 

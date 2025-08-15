@@ -24,8 +24,8 @@ __global__ void gpuEvolvePhaseField(LBMFields d); // advection-diffusion of the 
 // ======================================================================================================= //
 __global__ void gpuApplyInflow(LBMFields d, const int STEP); // inflow at z=0                              //
 __global__ void gpuApplyOutflow(LBMFields d);                // neumann at z=nz-1                          //
-__global__ void gpuApplyPeriodicX(LBMFields d);                                                            //
-__global__ void gpuApplyPeriodicY(LBMFields d);                                                            //
+__global__ void gpuApplyPeriodicX(LBMFields d);              // periodic at x                              //
+__global__ void gpuApplyPeriodicY(LBMFields d);              // periodic at y                              //
 // ======================================================================================================= //
 //                                          DERIVED FIELDS                                                 //
 // ======================================================================================================= //

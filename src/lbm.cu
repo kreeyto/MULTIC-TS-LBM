@@ -220,212 +220,186 @@ __global__ void gpuCollisionStream(LBMFields d) {
     const float uu = 1.5f * (ux_val*ux_val + uy_val*uy_val + uz_val*uz_val);
 
     #ifdef D3Q19
-        float eqbase = rho_val * (-uu + ux_val * (3.0f + 4.5f*ux_val));
+    float feq = W_1 * (rho_val + rho_val * (-uu + ux_val * (3.0f + 4.5f*ux_val))) - W_1;
     #elif defined(D3Q27)
-        float eqbase = rho_val * (-uu + ux_val * (3.0f + ux_val * (4.5f + 4.5f*ux_val) - 3.0f*uu));
+    float feq = W_1 * (rho_val + rho_val * (-uu + ux_val * (3.0f + ux_val * (4.5f + 4.5f*ux_val) - 3.0f*uu))) - W_1;
     #endif
-    float feq = W_1 * (rho_val + eqbase) - W_1;
     float fneq = pop[1] - feq;
     float PXX = fneq;
 
     #ifdef D3Q19
-        eqbase = rho_val * (-uu + (ux_val*-1 + uy_val*0 + uz_val*0) * (3.0f + 4.5f*(ux_val*-1 + uy_val*0 + uz_val*0)));
+    feq = W_1 * (rho_val + rho_val * (-uu - ux_val * (3.0f - 4.5f*ux_val))) - W_1;
     #elif defined(D3Q27)
-        eqbase = rho_val * (-uu + (ux_val*-1 + uy_val*0 + uz_val*0) * (3.0f + (ux_val*-1 + uy_val*0 + uz_val*0) * (4.5f + 4.5f*(ux_val*-1 + uy_val*0 + uz_val*0)) - 3.0f*uu));
+    feq = W_1 * (rho_val + rho_val * (-uu - ux_val * (3.0f - ux_val * (4.5f - 4.5f*ux_val) - 3.0f*uu))) - W_1;
     #endif
-    feq = W_1 * (rho_val + eqbase) - W_1;
     fneq = pop[2] - feq;
     PXX += fneq;
 
     #ifdef D3Q19
-        eqbase = rho_val * (-uu + (ux_val*0 + uy_val*1 + uz_val*0) * (3.0f + 4.5f*(ux_val*0 + uy_val*1 + uz_val*0)));
+    feq = W_1 * (rho_val + rho_val * (-uu + uy_val * (3.0f + 4.5f*uy_val))) - W_1;
     #elif defined(D3Q27)
-        eqbase = rho_val * (-uu + (ux_val*0 + uy_val*1 + uz_val*0) * (3.0f + (ux_val*0 + uy_val*1 + uz_val*0) * (4.5f + 4.5f*(ux_val*0 + uy_val*1 + uz_val*0)) - 3.0f*uu));
+    feq = W_1 * (rho_val + rho_val * (-uu + uy_val * (3.0f + uy_val * (4.5f + 4.5f*uy_val) - 3.0f*uu))) - W_1;
     #endif
-    feq = W_1 * (rho_val + eqbase) - W_1;
     fneq = pop[3] - feq;
     float PYY = fneq;
 
     #ifdef D3Q19
-        eqbase = rho_val * (-uu + (ux_val*0 + uy_val*-1 + uz_val*0) * (3.0f + 4.5f*(ux_val*0 + uy_val*-1 + uz_val*0)));
+    feq = W_1 * (rho_val + rho_val * (-uu - uy_val * (3.0f - 4.5f*uy_val))) - W_1;
     #elif defined(D3Q27)
-        eqbase = rho_val * (-uu + (ux_val*0 + uy_val*-1 + uz_val*0) * (3.0f + (ux_val*0 + uy_val*-1 + uz_val*0) * (4.5f + 4.5f*(ux_val*0 + uy_val*-1 + uz_val*0)) - 3.0f*uu));
+    feq = W_1 * (rho_val + rho_val * (-uu - uy_val * (3.0f - uy_val * (4.5f - 4.5f*uy_val) - 3.0f*uu))) - W_1;
     #endif
-    feq = W_1 * (rho_val + eqbase) - W_1;
     fneq = pop[4] - feq;
     PYY += fneq;
 
     #ifdef D3Q19
-        eqbase = rho_val * (-uu + (ux_val*0 + uy_val*0 + uz_val*1) * (3.0f + 4.5f*(ux_val*0 + uy_val*0 + uz_val*1)));
+    feq = W_1 * (rho_val + rho_val * (-uu + uz_val * (3.0f + 4.5f*uz_val))) - W_1;
     #elif defined(D3Q27)
-        eqbase = rho_val * (-uu + (ux_val*0 + uy_val*0 + uz_val*1) * (3.0f + (ux_val*0 + uy_val*0 + uz_val*1) * (4.5f + 4.5f*(ux_val*0 + uy_val*0 + uz_val*1)) - 3.0f*uu));
+    feq = W_1 * (rho_val + rho_val * (-uu + uz_val * (3.0f + uz_val * (4.5f + 4.5f*uz_val) - 3.0f*uu))) - W_1;
     #endif
-    feq = W_1 * (rho_val + eqbase) - W_1;
     fneq = pop[5] - feq;
     float PZZ = fneq;
 
     #ifdef D3Q19
-        eqbase = rho_val * (-uu + (ux_val*0 + uy_val*0 + uz_val*-1) * (3.0f + 4.5f*(ux_val*0 + uy_val*0 + uz_val*-1)));
+    feq = W_1 * (rho_val + rho_val * (-uu - uz_val * (3.0f - 4.5f*uz_val))) - W_1;
     #elif defined(D3Q27)
-        eqbase = rho_val * (-uu + (ux_val*0 + uy_val*0 + uz_val*-1) * (3.0f + (ux_val*0 + uy_val*0 + uz_val*-1) * (4.5f + 4.5f*(ux_val*0 + uy_val*0 + uz_val*-1)) - 3.0f*uu));
+    feq = W_1 * (rho_val + rho_val * (-uu - uz_val * (3.0f - uz_val * (4.5f - 4.5f*uz_val) - 3.0f*uu))) - W_1;
     #endif
-    feq = W_1 * (rho_val + eqbase) - W_1;
     fneq = pop[6] - feq;
     PZZ += fneq;
 
     #ifdef D3Q19
-        eqbase = rho_val * (-uu + (ux_val*1 + uy_val*1 + uz_val*0) * (3.0f + 4.5f*(ux_val*1 + uy_val*1 + uz_val*0)));
+    feq = W_2 * (rho_val + rho_val * (-uu + (ux_val + uy_val) * (3.0f + 4.5f*(ux_val + uy_val)))) - W_2;
     #elif defined(D3Q27)
-        eqbase = rho_val * (-uu + (ux_val*1 + uy_val*1 + uz_val*0) * (3.0f + (ux_val*1 + uy_val*1 + uz_val*0) * (4.5f + 4.5f*(ux_val*1 + uy_val*1 + uz_val*0)) - 3.0f*uu));
+    feq = W_2 * (rho_val + rho_val * (-uu + (ux_val + uy_val) * (3.0f + (ux_val + uy_val) * (4.5f + 4.5f*(ux_val + uy_val)) - 3.0f*uu))) - W_2;
     #endif
-    feq = W_2 * (rho_val + eqbase) - W_2;
     fneq = pop[7] - feq;
     PXX += fneq; PYY += fneq; float PXY = fneq;
 
     #ifdef D3Q19
-        eqbase = rho_val * (-uu + (ux_val*-1 + uy_val*-1 + uz_val*0) * (3.0f + 4.5f*(ux_val*-1 + uy_val*-1 + uz_val*0)));
+    feq = W_2 * (rho_val + rho_val * (-uu - (ux_val + uy_val) * (3.0f - 4.5f*(ux_val + uy_val)))) - W_2;
     #elif defined(D3Q27)
-        eqbase = rho_val * (-uu + (ux_val*-1 + uy_val*-1 + uz_val*0) * (3.0f + (ux_val*-1 + uy_val*-1 + uz_val*0) * (4.5f + 4.5f*(ux_val*-1 + uy_val*-1 + uz_val*0)) - 3.0f*uu));
+    feq = W_2 * (rho_val + rho_val * (-uu - (ux_val + uy_val) * (3.0f - (ux_val + uy_val) * (4.5f - 4.5f*(ux_val + uy_val)) - 3.0f*uu))) - W_2;
     #endif
-    feq = W_2 * (rho_val + eqbase) - W_2;
     fneq = pop[8] - feq;
     PXX += fneq; PYY += fneq; PXY += fneq;
 
     #ifdef D3Q19
-        eqbase = rho_val * (-uu + (ux_val*1 + uy_val*0 + uz_val*1) * (3.0f + 4.5f*(ux_val*1 + uy_val*0 + uz_val*1)));
+    feq = W_2 * (rho_val + rho_val * (-uu + (ux_val + uz_val) * (3.0f + 4.5f*(ux_val + uz_val)))) - W_2;
     #elif defined(D3Q27)
-        eqbase = rho_val * (-uu + (ux_val*1 + uy_val*0 + uz_val*1) * (3.0f + (ux_val*1 + uy_val*0 + uz_val*1) * (4.5f + 4.5f*(ux_val*1 + uy_val*0 + uz_val*1)) - 3.0f*uu));
+    feq = W_2 * (rho_val + rho_val * (-uu + (ux_val + uz_val) * (3.0f + (ux_val + uz_val) * (4.5f + 4.5f*(ux_val + uz_val)) - 3.0f*uu))) - W_2;
     #endif
-    feq = W_2 * (rho_val + eqbase) - W_2;
     fneq = pop[9] - feq;
     PXX += fneq; PZZ += fneq; float PXZ = fneq;
 
     #ifdef D3Q19
-        eqbase = rho_val * (-uu + (ux_val*-1 + uy_val*0 + uz_val*-1) * (3.0f + 4.5f*(ux_val*-1 + uy_val*0 + uz_val*-1)));
+    feq = W_2 * (rho_val + rho_val * (-uu - (ux_val + uz_val) * (3.0f - 4.5f*(ux_val + uz_val)))) - W_2;
     #elif defined(D3Q27)
-        eqbase = rho_val * (-uu + (ux_val*-1 + uy_val*0 + uz_val*-1) * (3.0f + (ux_val*-1 + uy_val*0 + uz_val*-1) * (4.5f + 4.5f*(ux_val*-1 + uy_val*0 + uz_val*-1)) - 3.0f*uu));
+    feq = W_2 * (rho_val + rho_val * (-uu - (ux_val + uz_val) * (3.0f - (ux_val + uz_val) * (4.5f - 4.5f*(ux_val + uz_val)) - 3.0f*uu))) - W_2;
     #endif
-    feq = W_2 * (rho_val + eqbase) - W_2;
     fneq = pop[10] - feq;
     PXX += fneq; PZZ += fneq; PXZ += fneq;
 
     #ifdef D3Q19
-        eqbase = rho_val * (-uu + (ux_val*0 + uy_val*1 + uz_val*1) * (3.0f + 4.5f*(ux_val*0 + uy_val*1 + uz_val*1)));
+    feq = W_2 * (rho_val + rho_val * (-uu + (uy_val + uz_val) * (3.0f + 4.5f*(uy_val + uz_val)))) - W_2;
     #elif defined(D3Q27)
-        eqbase = rho_val * (-uu + (ux_val*0 + uy_val*1 + uz_val*1) * (3.0f + (ux_val*0 + uy_val*1 + uz_val*1) * (4.5f + 4.5f*(ux_val*0 + uy_val*1 + uz_val*1)) - 3.0f*uu));
+    feq = W_2 * (rho_val + rho_val * (-uu + (uy_val + uz_val) * (3.0f + (uy_val + uz_val) * (4.5f + 4.5f*(uy_val + uz_val)) - 3.0f*uu))) - W_2;
     #endif
-    feq = W_2 * (rho_val + eqbase) - W_2;
     fneq = pop[11] - feq;
     PYY += fneq; PZZ += fneq; float PYZ = fneq;
 
     #ifdef D3Q19
-        eqbase = rho_val * (-uu + (ux_val*0 + uy_val*-1 + uz_val*-1) * (3.0f + 4.5f*(ux_val*0 + uy_val*-1 + uz_val*-1)));
+    feq = W_2 * (rho_val + rho_val * (-uu - (uy_val + uz_val) * (3.0f - 4.5f*(uy_val + uz_val)))) - W_2;
     #elif defined(D3Q27)
-        eqbase = rho_val * (-uu + (ux_val*0 + uy_val*-1 + uz_val*-1) * (3.0f + (ux_val*0 + uy_val*-1 + uz_val*-1) * (4.5f + 4.5f*(ux_val*0 + uy_val*-1 + uz_val*-1)) - 3.0f*uu));
+    feq = W_2 * (rho_val + rho_val * (-uu - (uy_val + uz_val) * (3.0f - (uy_val + uz_val) * (4.5f - 4.5f*(uy_val + uz_val)) - 3.0f*uu))) - W_2;
     #endif
-    feq = W_2 * (rho_val + eqbase) - W_2;
     fneq = pop[12] - feq;
     PYY += fneq; PZZ += fneq; PYZ += fneq;
 
     #ifdef D3Q19
-        eqbase = rho_val * (-uu + (ux_val*1 + uy_val*-1 + uz_val*0) * (3.0f + 4.5f*(ux_val*1 + uy_val*-1 + uz_val*0)));
+    feq = W_2 * (rho_val + rho_val * (-uu + (ux_val - uy_val) * (3.0f + 4.5f*(ux_val - uy_val)))) - W_2;
     #elif defined(D3Q27)
-        eqbase = rho_val * (-uu + (ux_val*1 + uy_val*-1 + uz_val*0) * (3.0f + (ux_val*1 + uy_val*-1 + uz_val*0) * (4.5f + 4.5f*(ux_val*1 + uy_val*-1 + uz_val*0)) - 3.0f*uu));
+    feq = W_2 * (rho_val + rho_val * (-uu + (ux_val - uy_val) * (3.0f + (ux_val - uy_val) * (4.5f + 4.5f*(ux_val - uy_val)) - 3.0f*uu))) - W_2;
     #endif
-    feq = W_2 * (rho_val + eqbase) - W_2;
     fneq = pop[13] - feq;
     PXX += fneq; PYY += fneq; PXY -= fneq;
 
     #ifdef D3Q19
-        eqbase = rho_val * (-uu + (ux_val*-1 + uy_val*1 + uz_val*0) * (3.0f + 4.5f*(ux_val*-1 + uy_val*1 + uz_val*0)));
+    feq = W_2 * (rho_val + rho_val * (-uu + (uy_val - ux_val) * (3.0f + 4.5f*(uy_val - ux_val)))) - W_2;
     #elif defined(D3Q27)
-        eqbase = rho_val * (-uu + (ux_val*-1 + uy_val*1 + uz_val*0) * (3.0f + (ux_val*-1 + uy_val*1 + uz_val*0) * (4.5f + 4.5f*(ux_val*-1 + uy_val*1 + uz_val*0)) - 3.0f*uu));
+    feq = W_2 * (rho_val + rho_val * (-uu + (uy_val - ux_val) * (3.0f + (uy_val - ux_val) * (4.5f + 4.5f*(uy_val - ux_val)) - 3.0f*uu))) - W_2;
     #endif
-    feq = W_2 * (rho_val + eqbase) - W_2;
     fneq = pop[14] - feq;
     PXX += fneq; PYY += fneq; PXY -= fneq;
 
     #ifdef D3Q19
-        eqbase = rho_val * (-uu + (ux_val*1 + uy_val*0 + uz_val*-1) * (3.0f + 4.5f*(ux_val*1 + uy_val*0 + uz_val*-1)));
+    feq = W_2 * (rho_val + rho_val * (-uu + (ux_val - uz_val) * (3.0f + 4.5f*(ux_val - uz_val)))) - W_2;
     #elif defined(D3Q27)
-        eqbase = rho_val * (-uu + (ux_val*1 + uy_val*0 + uz_val*-1) * (3.0f + (ux_val*1 + uy_val*0 + uz_val*-1) * (4.5f + 4.5f*(ux_val*1 + uy_val*0 + uz_val*-1)) - 3.0f*uu));
+    feq = W_2 * (rho_val + rho_val * (-uu + (ux_val - uz_val) * (3.0f + (ux_val - uz_val) * (4.5f + 4.5f*(ux_val - uz_val)) - 3.0f*uu))) - W_2;
     #endif
-    feq = W_2 * (rho_val + eqbase) - W_2;
     fneq = pop[15] - feq;
     PXX += fneq; PZZ += fneq; PXZ -= fneq;
 
     #ifdef D3Q19
-        eqbase = rho_val * (-uu + (ux_val*-1 + uy_val*0 + uz_val*1) * (3.0f + 4.5f*(ux_val*-1 + uy_val*0 + uz_val*1)));
+    feq = W_2 * (rho_val + rho_val * (-uu + (uz_val - ux_val) * (3.0f + 4.5f*(uz_val - ux_val)))) - W_2;
     #elif defined(D3Q27)
-        eqbase = rho_val * (-uu + (ux_val*-1 + uy_val*0 + uz_val*1) * (3.0f + (ux_val*-1 + uy_val*0 + uz_val*1) * (4.5f + 4.5f*(ux_val*-1 + uy_val*0 + uz_val*1)) - 3.0f*uu));
+    feq = W_2 * (rho_val + rho_val * (-uu + (uz_val - ux_val) * (3.0f + (uz_val - ux_val) * (4.5f + 4.5f*(uz_val - ux_val)) - 3.0f*uu))) - W_2;
     #endif
-    feq = W_2 * (rho_val + eqbase) - W_2;
     fneq = pop[16] - feq;
     PXX += fneq; PZZ += fneq; PXZ -= fneq;
 
     #ifdef D3Q19
-        eqbase = rho_val * (-uu + (ux_val*0 + uy_val*1 + uz_val*-1) * (3.0f + 4.5f*(ux_val*0 + uy_val*1 + uz_val*-1)));
+    feq = W_2 * (rho_val + rho_val * (-uu + (uy_val - uz_val) * (3.0f + 4.5f*(uy_val - uz_val)))) - W_2;
     #elif defined(D3Q27)
-        eqbase = rho_val * (-uu + (ux_val*0 + uy_val*1 + uz_val*-1) * (3.0f + (ux_val*0 + uy_val*1 + uz_val*-1) * (4.5f + 4.5f*(ux_val*0 + uy_val*1 + uz_val*-1)) - 3.0f*uu));
+    feq = W_2 * (rho_val + rho_val * (-uu + (uy_val - uz_val) * (3.0f + (uy_val - uz_val) * (4.5f + 4.5f*(uy_val - uz_val)) - 3.0f*uu))) - W_2;
     #endif
-    feq = W_2 * (rho_val + eqbase) - W_2;
     fneq = pop[17] - feq;
     PYY += fneq; PZZ += fneq; PYZ -= fneq;
 
     #ifdef D3Q19
-        eqbase = rho_val * (-uu + (ux_val*0 + uy_val*-1 + uz_val*1) * (3.0f + 4.5f*(ux_val*0 + uy_val*-1 + uz_val*1)));
+    feq = W_2 * (rho_val + rho_val * (-uu + (uz_val - uy_val) * (3.0f + 4.5f*(uz_val - uy_val)))) - W_2;
     #elif defined(D3Q27)
-        eqbase = rho_val * (-uu + (ux_val*0 + uy_val*-1 + uz_val*1) * (3.0f + (ux_val*0 + uy_val*-1 + uz_val*1) * (4.5f + 4.5f*(ux_val*0 + uy_val*-1 + uz_val*1)) - 3.0f*uu));
+    feq = W_2 * (rho_val + rho_val * (-uu + (uz_val - uy_val) * (3.0f + (uz_val - uy_val) * (4.5f + 4.5f*(uz_val - uy_val)) - 3.0f*uu))) - W_2;
     #endif
-    feq = W_2 * (rho_val + eqbase) - W_2;
     fneq = pop[18] - feq;
     PYY += fneq; PZZ += fneq; PYZ -= fneq;
     
     #ifdef D3Q27
-    eqbase = rho_val * (-uu + (ux_val*1 + uy_val*1 + uz_val*1) * (3.0f + (ux_val*1 + uy_val*1 + uz_val*1) * (4.5f + 4.5f*(ux_val*1 + uy_val*1 + uz_val*1)) - 3.0f*uu));
-    feq = W_3 * (rho_val + eqbase) - W_3;
+    feq = W_3 * (rho_val + rho_val * (-uu + (ux_val + uy_val + uz_val) * (3.0f + (ux_val + uy_val + uz_val) * (4.5f + 4.5f*(ux_val + uy_val + uz_val)) - 3.0f*uu))) - W_3;
     fneq = pop[19] - feq;
     PXX += fneq; PYY += fneq; PZZ += fneq;
     PXY += fneq; PXZ += fneq; PYZ += fneq;
 
-    eqbase = rho_val * (-uu + (ux_val*-1 + uy_val*-1 + uz_val*-1) * (3.0f + (ux_val*-1 + uy_val*-1 + uz_val*-1) * (4.5f + 4.5f*(ux_val*-1 + uy_val*-1 + uz_val*-1)) - 3.0f*uu));
-    feq = W_3 * (rho_val + eqbase) - W_3;
+    feq = W_3 * (rho_val + rho_val * (-uu - (ux_val + uy_val + uz_val) * (3.0f - (ux_val + uy_val + uz_val) * (4.5f - 4.5f*(ux_val + uy_val + uz_val)) - 3.0f*uu))) - W_3;
     fneq = pop[20] - feq;
     PXX += fneq; PYY += fneq; PZZ += fneq;
     PXY += fneq; PXZ += fneq; PYZ += fneq;
 
-    eqbase = rho_val * (-uu + (ux_val*1 + uy_val*1 + uz_val*-1) * (3.0f + (ux_val*1 + uy_val*1 + uz_val*-1) * (4.5f + 4.5f*(ux_val*1 + uy_val*1 + uz_val*-1)) - 3.0f*uu));
-    feq = W_3 * (rho_val + eqbase) - W_3;
+    feq = W_3 * (rho_val + rho_val * (-uu + (ux_val + uy_val - uz_val) * (3.0f + (ux_val + uy_val - uz_val) * (4.5f + 4.5f*(ux_val + uy_val - uz_val)) - 3.0f*uu))) - W_3;
     fneq = pop[21] - feq;
     PXX += fneq; PYY += fneq; PZZ += fneq;
     PXY += fneq; PXZ -= fneq; PYZ -= fneq;
 
-    eqbase = rho_val * (-uu + (ux_val*-1 + uy_val*-1 + uz_val*1) * (3.0f + (ux_val*-1 + uy_val*-1 + uz_val*1) * (4.5f + 4.5f*(ux_val*-1 + uy_val*-1 + uz_val*1)) - 3.0f*uu));
-    feq = W_3 * (rho_val + eqbase) - W_3;
+    feq = W_3 * (rho_val + rho_val * (-uu + (uz_val - uy_val - ux_val) * (3.0f + (uz_val - uy_val - ux_val) * (4.5f + 4.5f*(uz_val - uy_val - ux_val)) - 3.0f*uu))) - W_3;
     fneq = pop[22] - feq;
     PXX += fneq; PYY += fneq; PZZ += fneq;
     PXY += fneq; PXZ -= fneq; PYZ -= fneq; 
 
-    eqbase = rho_val * (-uu + (ux_val*1 + uy_val*-1 + uz_val*1) * (3.0f + (ux_val*1 + uy_val*-1 + uz_val*1) * (4.5f + 4.5f*(ux_val*1 + uy_val*-1 + uz_val*1)) - 3.0f*uu));
-    feq = W_3 * (rho_val + eqbase) - W_3;
+    feq = W_3 * (rho_val + rho_val * (-uu + (ux_val - uy_val + uz_val) * (3.0f + (ux_val - uy_val + uz_val) * (4.5f + 4.5f*(ux_val - uy_val + uz_val)) - 3.0f*uu))) - W_3;
     fneq = pop[23] - feq;
     PXX += fneq; PYY += fneq; PZZ += fneq;
     PXY -= fneq; PXZ += fneq; PYZ -= fneq;
 
-    eqbase = rho_val * (-uu + (ux_val*-1 + uy_val*1 + uz_val*-1) * (3.0f + (ux_val*-1 + uy_val*1 + uz_val*-1) * (4.5f + 4.5f*(ux_val*-1 + uy_val*1 + uz_val*-1)) - 3.0f*uu));
-    feq = W_3 * (rho_val + eqbase) - W_3;
+    feq = W_3 * (rho_val + rho_val * (-uu + (uy_val - ux_val - uz_val) * (3.0f + (uy_val - ux_val - uz_val) * (4.5f + 4.5f*(uy_val - ux_val - uz_val)) - 3.0f*uu))) - W_3;
     fneq = pop[24] - feq;
     PXX += fneq; PYY += fneq; PZZ += fneq;
     PXY -= fneq; PXZ += fneq; PYZ -= fneq;
 
-    eqbase = rho_val * (-uu + (ux_val*-1 + uy_val*1 + uz_val*1) * (3.0f + (ux_val*-1 + uy_val*1 + uz_val*1) * (4.5f + 4.5f*(ux_val*-1 + uy_val*1 + uz_val*1)) - 3.0f*uu));
-    feq = W_3 * (rho_val + eqbase) - W_3;
+    feq = W_3 * (rho_val + rho_val * (-uu + (uy_val - ux_val + uz_val) * (3.0f + (uy_val - ux_val + uz_val) * (4.5f + 4.5f*(uy_val - ux_val + uz_val)) - 3.0f*uu))) - W_3;
     fneq = pop[25] - feq;
     PXX += fneq; PYY += fneq; PZZ += fneq;
     PXY -= fneq; PXZ -= fneq; PYZ += fneq;
 
-    eqbase = rho_val * (-uu + (ux_val*1 + uy_val*-1 + uz_val*-1) * (3.0f + (ux_val*1 + uy_val*-1 + uz_val*-1) * (4.5f + 4.5f*(ux_val*1 + uy_val*-1 + uz_val*-1)) - 3.0f*uu));
-    feq = W_3 * (rho_val + eqbase) - W_3;
+    feq = W_3 * (rho_val + rho_val * (-uu + (ux_val - uy_val - uz_val) * (3.0f + (ux_val - uy_val - uz_val) * (4.5f + 4.5f*(ux_val - uy_val - uz_val)) - 3.0f*uu))) - W_3;
     fneq = pop[26] - feq;
     PXX += fneq; PYY += fneq; PZZ += fneq;
     PXY -= fneq; PXZ -= fneq; PYZ += fneq;
@@ -440,7 +414,7 @@ __global__ void gpuCollisionStream(LBMFields d) {
 
     const float omega_loc = gpu_local_omega(z);
     const float omco_loc = 1.0f - omega_loc;
-    const float coeff_force = 1.0f - 0.5f * omco_loc;
+    const float coeff_force = 1.0f - 0.5f * omega_loc;
 
     feq = gpu_compute_equilibria(rho_val,ux_val,uy_val,uz_val,0);
     float force_corr = gpu_compute_force_term(coeff_force,feq,ux_val,uy_val,uz_val,ffx_val,ffy_val,ffz_val,inv_rho_cssq,0);

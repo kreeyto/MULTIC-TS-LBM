@@ -262,57 +262,7 @@ __global__ void gpuApplyPeriodicY(LBMFields d) {
 
 #elif defined(DROPLET_CASE)
 
-__global__ void gpuReconstructBoundaries(LBMFields d) {
-    const int x = threadIdx.x + blockIdx.x * blockDim.x;
-    const int y = threadIdx.y + blockIdx.y * blockDim.y;
-    const int z = threadIdx.z + blockIdx.z * blockDim.z;
-
-    bool is_valid_edge = (x < NX && y < NY && z < NZ) &&
-                            (x == 0 || x == NX-1 ||
-                             y == 0 || y == NY-1 || 
-                             z == 0 || z == NZ-1); 
-    if (!is_valid_edge) return;                       
-
-    const idx_t idx3 = gpu_idx_global3(x,y,z);
-
-    #pragma unroll FLINKS
-    for (int Q = 0; Q < FLINKS; ++Q) {
-        const int sx = x + CIX[Q];
-        const int sy = y + CIY[Q];
-        const int sz = z + CIZ[Q];
-        if (sx >= 0 && sx < NX && sy >= 0 && sy < NY && sz >= 0 && sz < NZ) {
-            const idx_t streamed_boundary_idx4 = gpu_idx_global4(sx,sy,sz,Q);
-            d.f[streamed_boundary_idx4] = to_dtype(W[Q] * d.rho[idx3] - W[Q]);
-        }
-    }
-    #pragma unroll GLINKS
-    for (int Q = 0; Q < GLINKS; ++Q) {
-        const int sx = x + CIX[Q];
-        const int sy = y + CIY[Q];
-        const int sz = z + CIZ[Q];
-        if (sx >= 0 && sx < NX && sy >= 0 && sy < NY && sz >= 0 && sz < NZ) {
-            const idx_t streamed_boundary_idx4 = gpu_idx_global4(sx,sy,sz,Q);
-            d.g[streamed_boundary_idx4] = W_G[Q] * d.phi[idx3] - W_G[Q];
-        }
-    }
-}
-
-__global__ void gpuApplyOutflow(LBMFields d) {
-    const int x = threadIdx.x + blockIdx.x * blockDim.x;
-    const int y = threadIdx.y + blockIdx.y * blockDim.y;
-    const int z = NZ-1;
-
-    if (x >= NX || y >= NY) return;
-
-    const idx_t top = gpu_idx_global3(x,y,z);
-    const idx_t below = gpu_idx_global3(x,y,z-1);
-
-    d.phi[top] = d.phi[below];
-    d.rho[top] = d.rho[below];
-    d.ux[top]  = d.ux[below];
-    d.uy[top]  = d.uy[below];
-    d.uz[top]  = d.uz[below];
-}
+// still undefined
 
 #endif // FLOW_CASE
 

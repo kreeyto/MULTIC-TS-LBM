@@ -71,9 +71,10 @@ __global__ void gpuNormals(LBMFields d) {
     const float grad_phi_z = 3.0f * w_sum_grad_z;
     
     const float ind_val = sqrtf(grad_phi_x*grad_phi_x + grad_phi_y*grad_phi_y + grad_phi_z*grad_phi_z);
-    const float normx_val = grad_phi_x / (ind_val + 1e-9f);
-    const float normy_val = grad_phi_y / (ind_val + 1e-9f);
-    const float normz_val = grad_phi_z / (ind_val + 1e-9f);
+    const float inv_ind = 1.0f / (ind_val + 1e-9f);
+    const float normx_val = grad_phi_x * inv_ind;
+    const float normy_val = grad_phi_y * inv_ind;
+    const float normz_val = grad_phi_z * inv_ind;
 
     d.ind[idx3] = ind_val;
     d.normx[idx3] = normx_val;

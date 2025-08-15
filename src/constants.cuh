@@ -4,14 +4,14 @@
 #include "../include/velocity_sets.cuh"
 #include "../include/perturbation_data.cuh"
 
-#define D_FIELDS
+//#define D_FIELDS
 
 #define JET_CASE
 //#define DROPLET_CASE
 
-#define RUN_MODE
+//#define RUN_MODE
 //#define SAMPLE_MODE
-//#define DEBUG_MODE
+#define DEBUG_MODE
 
 #ifdef RUN_MODE
     constexpr int MACRO_SAVE = 100;
@@ -32,10 +32,10 @@
     constexpr int NY   = MESH;
     constexpr int NZ   = MESH*2;
     // jet velocity
-    constexpr float U_JET = 0.01f; 
+    constexpr float U_JET = 0.05f; 
     // adimensional parameters
     constexpr int REYNOLDS = 5000; 
-    constexpr int WEBER    = 10; 
+    constexpr int WEBER    = 500; 
     // general model parameters
     constexpr float VISC  = (U_JET * DIAM) / REYNOLDS;      // kinematic viscosity
     constexpr float TAU   = 0.5f + 3.0f * VISC;             // relaxation time

@@ -46,9 +46,11 @@ void initDeviceVars() {
 
     #ifdef D_FIELDS
     checkCudaErrors(cudaMalloc(&dfields.vorticity_mag, SIZE));
-    checkCudaErrors(cudaMalloc(&dfields.q_criterion,   SIZE));
+    checkCudaErrors(cudaMalloc(&dfields.velocity_mag,  SIZE));
     #endif // D_FIELDS
 
+    // initialization with cudamemset, currently using a kernel
+    /*
     checkCudaErrors(cudaMemset(lbm.pxx,   0, SIZE));
     checkCudaErrors(cudaMemset(lbm.pyy,   0, SIZE));
     checkCudaErrors(cudaMemset(lbm.pzz,   0, SIZE));
@@ -64,6 +66,7 @@ void initDeviceVars() {
     checkCudaErrors(cudaMemset(lbm.ffx,   0, SIZE));
     checkCudaErrors(cudaMemset(lbm.ffy,   0, SIZE));
     checkCudaErrors(cudaMemset(lbm.ffz,   0, SIZE));
+    */
 
     checkCudaErrors(cudaMemcpyToSymbol(W,   &H_W,   FLINKS * sizeof(float)));
     checkCudaErrors(cudaMemcpyToSymbol(W_G, &H_W_G, GLINKS * sizeof(float)));

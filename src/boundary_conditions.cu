@@ -18,7 +18,6 @@ __global__ void gpuApplyInflow(LBMFields d, const int STEP) {
     if (radial_dist > radius) return;
 
     const idx_t idx3_in = gpu_idx_global3(x,y,z);
-    const float phi_in = 1.0f;
     const float uz_in = 
     #ifdef PERTURBATION
         /* apply perturbation */ U_JET * (1.0f + DATAZ[(STEP/MACRO_SAVE)%200] * 10.0f);
@@ -26,20 +25,16 @@ __global__ void gpuApplyInflow(LBMFields d, const int STEP) {
         /* straightforward */ U_JET;
     #endif 
 
-    d.phi[idx3_in] = phi_in;
-    d.ux[idx3_in] = 0.0f;
-    d.uy[idx3_in] = 0.0f;
     d.uz[idx3_in] = uz_in;
 
     int neighbor_idx = gpu_idx_global3(x,y,z+1);
-    d.rho[idx3_in] = d.rho[neighbor_idx]; 
     float feq = gpu_compute_equilibria(d.rho[neighbor_idx],0.0f,0.0f,uz_in,5);
     float fneq_reg = gpu_compute_non_equilibria(d.pxx[neighbor_idx],d.pyy[neighbor_idx],d.pzz[neighbor_idx],
                                                 d.pxy[neighbor_idx],d.pxz[neighbor_idx],d.pyz[neighbor_idx],
                                                 d.ux[neighbor_idx],d.uy[neighbor_idx],d.uz[neighbor_idx],5);
     d.f[gpu_idx_global4(x,y,z+1,5)] = to_dtype(feq + OMCO * fneq_reg);
 
-    feq = gpu_compute_truncated_equilibria(phi_in,0.0f,0.0f,uz_in,5);
+    feq = gpu_compute_truncated_equilibria(1.0f,0.0f,0.0f,uz_in,5);
     d.g[gpu_idx_global4(x,y,z+1,5)] = feq;
 
     neighbor_idx = gpu_idx_global3(x+1,y,z+1);
@@ -111,7 +106,7 @@ __global__ void gpuApplyOutflow(LBMFields d) {
     const int idx_outer = gpu_idx_global3(x,y,z);
     const int idx_inner = gpu_idx_global3(x,y,z-1);
     
-    d.rho[idx_outer] = d.rho[idx_inner];
+    //d.rho[idx_outer] = d.rho[idx_inner];
     d.phi[idx_outer] = d.phi[idx_inner];
     d.ux[idx_outer] = d.ux[idx_inner];
     d.uy[idx_outer] = d.uy[idx_inner];
@@ -202,11 +197,6 @@ __global__ void gpuApplyPeriodicX(LBMFields d) {
     const idx_t bL = gpu_idx_global3(1,y,z);
     const idx_t bR = gpu_idx_global3(NX-2,y,z);
 
-    //#elif defined(D3Q27) //      0  1  2  3  4  5  6  7  8  9  10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26
-    //    const ci_t H_CIX[27] = { 0, 1,-1, 0, 0, 0, 0, 1,-1, 1,-1, 0, 0, 1,-1, 1,-1, 0, 0, 1,-1, 1,-1, 1,-1,-1, 1 };
-    //    const ci_t H_CIY[27] = { 0, 0, 0, 1,-1, 0, 0, 1,-1, 0, 0, 1,-1,-1, 1, 0, 0, 1,-1, 1,-1, 1,-1,-1, 1, 1,-1 };
-    //    const ci_t H_CIZ[27] = { 0, 0, 0, 0, 0, 1,-1, 0, 0, 1,-1, 1,-1, 0, 0,-1, 1,-1, 1, 1,-1,-1, 1, 1,-1, 1,-1 };
-
     // positive x contributions
     copy_dirs<dtype_t,1,7,9,13,15>(d.f,bL,bR);   
     #ifdef D3Q27
@@ -219,7 +209,7 @@ __global__ void gpuApplyPeriodicX(LBMFields d) {
     copy_dirs<dtype_t,20,22,24,25>(d.f,bR,bL);
     #endif // D3Q27
 
-    d.g[PLANE+bL]   = d.g[PLANE+bR];
+    d.g[1*PLANE+bL] = d.g[1*PLANE+bR];
     d.g[2*PLANE+bR] = d.g[2*PLANE+bL];
     d.phi[gpu_idx_global3(0,y,z)] = d.phi[bR];
     d.phi[gpu_idx_global3(NX-1,y,z)] = d.phi[bL];
@@ -236,11 +226,6 @@ __global__ void gpuApplyPeriodicY(LBMFields d) {
 
     const idx_t bB = gpu_idx_global3(x,1,z);
     const idx_t bT = gpu_idx_global3(x,NY-2,z);
-
-    //#elif defined(D3Q27) //      0  1  2  3  4  5  6  7  8  9  10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26
-    //    const ci_t H_CIX[27] = { 0, 1,-1, 0, 0, 0, 0, 1,-1, 1,-1, 0, 0, 1,-1, 1,-1, 0, 0, 1,-1, 1,-1, 1,-1,-1, 1 };
-    //    const ci_t H_CIY[27] = { 0, 0, 0, 1,-1, 0, 0, 1,-1, 0, 0, 1,-1,-1, 1, 0, 0, 1,-1, 1,-1, 1,-1,-1, 1, 1,-1 };
-    //    const ci_t H_CIZ[27] = { 0, 0, 0, 0, 0, 1,-1, 0, 0, 1,-1, 1,-1, 0, 0,-1, 1,-1, 1, 1,-1,-1, 1, 1,-1, 1,-1 };
 
     // positive y contributions
     copy_dirs<dtype_t,3,7,11,14,17>(d.f,bB,bT);

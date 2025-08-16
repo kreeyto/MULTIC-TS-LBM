@@ -23,9 +23,9 @@ extern LBMFields lbm;
 #ifdef D_FIELDS
 struct DerivedFields {
     float *vorticity_mag;
-    float *q_criterion;
+    float *velocity_mag;
 };
-#endif // D_FIELDS
 extern DerivedFields dfields;
+#endif // D_FIELDS
 
 void initDeviceVars();

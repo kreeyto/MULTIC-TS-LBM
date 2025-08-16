@@ -9,13 +9,13 @@
 #define JET_CASE
 //#define DROPLET_CASE
 
-//#define RUN_MODE
+#define RUN_MODE
 //#define SAMPLE_MODE
-#define DEBUG_MODE
+//#define DEBUG_MODE
 
 #ifdef RUN_MODE
     constexpr int MACRO_SAVE = 100;
-    constexpr int NSTEPS = 100000;
+    constexpr int NSTEPS = 30000;
 #elif defined(SAMPLE_MODE)
     constexpr int MACRO_SAVE = 100;
     constexpr int NSTEPS = 1000;
@@ -26,8 +26,8 @@
 
 #ifdef JET_CASE
     // domain size
-    constexpr int MESH = 128;
-    constexpr int DIAM = 20;
+    constexpr int MESH = 64;
+    constexpr int DIAM = 10;
     constexpr int NX   = MESH;
     constexpr int NY   = MESH;
     constexpr int NZ   = MESH*2;
@@ -49,7 +49,7 @@
     constexpr int NY   = MESH;
     constexpr int NZ   = MESH;
     // not used in this case, defined to avoid compilation errors
-    constexpr float U_JET = 0.05; 
+    constexpr float U_JET = 0.05f; 
     // general model parameters
     constexpr float TAU      = 0.55f;        // relaxation time
     constexpr float GAMMA    = 0.15f * 5.0f; // sharpening of the interface

@@ -1,8 +1,6 @@
 #pragma once
 #include "constants.cuh"
 
-#define OPTIM_FMA
-
 __device__ __forceinline__ idx_t gpu_idx_global3(const int x, const int y, const int z) {
     return x + y * NX + z * STRIDE;
 }
@@ -20,11 +18,6 @@ __device__ __forceinline__ float gpu_smoothstep(float edge0, float edge1, float 
     return x * x * (3.0f - 2.0f * x);
 }
 
-__device__ __forceinline__ float gpu_compute_truncated_equilibria(const float density, const float ux, const float uy, const float uz, const int Q) {
-    const float cu = 3.0f * (ux*CIX[Q] + uy*CIY[Q] + uz*CIZ[Q]);
-    return W_G[Q] * density * (1.0f + cu);
-}
-
 __device__ __forceinline__ float gpu_local_omega(int z) {
     float zn = float(z) / float(NZ-1);
     float s = (zn > Z_START) ? (zn - Z_START) / SPONGE : 0.0f;
@@ -40,6 +33,11 @@ __device__ __forceinline__ float gpu_compute_equilibria(const float density, con
         const float eqbase = density * (-uu + (ux*CIX[Q] + uy*CIY[Q] + uz*CIZ[Q]) * (3.0f + (ux*CIX[Q] + uy*CIY[Q] + uz*CIZ[Q]) * (4.5f + 4.5f*(ux*CIX[Q] + uy*CIY[Q] + uz*CIZ[Q])) - 3.0f*uu));
     #endif // VELOCITY_SET 
     return W[Q] * (density + eqbase) - W[Q];
+}
+
+__device__ __forceinline__ float gpu_compute_truncated_equilibria(const float density, const float ux, const float uy, const float uz, const int Q) {
+    const float cu = 3.0f * (ux*CIX[Q] + uy*CIY[Q] + uz*CIZ[Q]);
+    return W_G[Q] * density * (1.0f + cu);
 }
 
 __device__ __forceinline__ float gpu_compute_non_equilibria(const float PXX, const float PYY, const float PZZ, const float PXY, const float PXZ, const float PYZ,  const float ux, const float uy, const float uz, const int Q) {
